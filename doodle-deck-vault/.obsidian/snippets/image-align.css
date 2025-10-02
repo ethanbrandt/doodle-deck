@@ -1,0 +1,7 @@
+img[alt*="left"] {
+	float: left;
+	clear: left;
+	margin-right: 1rem; /* Adjust spacing as needed */
+	margin-bottom: 4px; /* Adjust spacing as needed */
+	margin-top: 4px; /* Adjust spacing as needed */
+}
