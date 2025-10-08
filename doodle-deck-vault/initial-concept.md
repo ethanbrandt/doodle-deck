@@ -46,6 +46,8 @@ Cards from your Hand can be played according to their Card Type
 **Unit**
 Unit Cards can be placed on the Board
 
+When a Unit's Health is reduced to 0, it is sent to it's Graveyard
+
 **Spell**
 Spell Cards can only be played on your Turn
 
@@ -57,7 +59,9 @@ Swift Spell Cards can be played on either player's Turn
 Swift Spell Cards' Game Rules are activated immediately upon playing, and then the Card is sent to your Graveyard
 
 #### Your Deck
-You can have 40 - 60 Cards in your Deck
+You can have 30-50 Cards in your Deck
+
+Duplicates are allowed in your deck
 
 If you run out of Cards, you lose
 
@@ -65,9 +69,9 @@ If you run out of Cards, you lose
 Your Graveyard is where Cards go when they die, are used up, or discarded
 
 ### The Cards
-#### Anatomy of a Card
+#### Anatomy of a Unit Card 
 ![[card-layout.png|left|400]]
-Every card has:
+Every Unit has:
 - Card Name
 - Energy Cost (The circles right of the Card Name)
 - Card Doodle (Card Art)
@@ -75,29 +79,29 @@ Every card has:
 - Game Rules (These can affect & change most every basic rule)
 - Damage / Health Values (The two numbers in the bottom right)
 
-Every turn, each Card gets 1 Action which can be used to:
+Every turn, each Unit gets 1 Action which can be used to:
 	Attack the card directly across from them (unless otherwise specified in the Card's Game Rules)
 	Move 1 position over (unless otherwise specified in the Card's Game Rules)
 	Invoke Game Rules that require an action
 
-When the Card's Action is used up, it cannot take another action until the player's (who owns the card) next turn (unless specified by the Game Rules)
+When the Unit's Action is used up, it cannot take another action until the player's (who owns the card) next turn (unless specified by the Game Rules)
 
-Card Health and Actions are reset at the beginning the player's turn
+Unit Health and Actions are reset at the beginning the player's turn
 
 #### Attacking & Defending
-When a player attacks with a Card, if there is a Card directly across from the attacking Card, that Card is attacked, otherwise the enemy player is attacked
+When a player attacks with a Unit, if there is a Unit directly across from the attacking Unit, that Unit is attacked, otherwise the enemy player is attacked
 
-If a Card attacks another card, they both do damage to each other's Health equal to their Damage
+If a Unit attacks another card, they both do damage to each other's Health equal to their Damage
 Ex.
 	(Damage / Health)
 	A(1 / 5) attacks B(2/ 3)
 	A takes 2 damage and now has 3 Health => A(1/3 {MAX 5})
 	B takes 1 damage and now has 2 Health => B(2/2 {MAX 3})
 
-When a Card's Health reaches 0, they are sent to their Graveyard
+When a Unit's Health reaches 0, they are sent to their Graveyard
 
 #### Moving
-When a player moves a Card to an adjacent slot
+When a player moves a Unit to an adjacent slot
 	If there is no Card in that slot, the Card is moved to that slot
 	If there is a Card in that slot, the Cards swap slots
 
