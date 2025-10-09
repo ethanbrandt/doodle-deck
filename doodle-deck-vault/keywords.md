@@ -69,6 +69,9 @@
 **Overhealth**
 	Temporary Health that cannot be replenished
 
+**Inspiration**
+	Temporary Damage buff
+
 **Intimidated**
 	Unit does half Damage for a Round
 
