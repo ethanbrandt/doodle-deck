@@ -3,7 +3,7 @@
 - [ ] Settings
 
 #### Game Scene
-- [ ] Basic Client-Server RPC Communication
+- [x] Basic Client-Server RPC Communication
 - [ ] Deck & Client Hands
 - [ ] Slot UI Events
 - [ ] Playing a Unit
