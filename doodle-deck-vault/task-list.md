@@ -4,6 +4,7 @@
 
 #### Game Scene
 - [x] Basic Client-Server RPC Communication
+- [x] Energy UI
 - [ ] Deck & Client Hands
 - [ ] Slot UI Events
 - [ ] Playing a Unit

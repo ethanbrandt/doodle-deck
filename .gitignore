@@ -69,3 +69,4 @@ unity-project/doodle-deck/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
 
 # Obsidian
 doodle-deck-vault/.obsidian/*.json
+doodle-deck-vault/.obsidian/appearance.json

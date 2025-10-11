@@ -10,11 +10,6 @@ public class HandManager : NetworkBehaviour
     [SerializeField] Camera cam2;
     [SerializeField] TextMeshProUGUI playerNumText;
     
-    void Start()
-    {
-        
-    }
-
     public override void OnNetworkSpawn()
     {
         if (IsServer)
