@@ -5,8 +5,8 @@
 #### Game Scene
 - [x] Basic Client-Server RPC Communication
 - [x] Energy UI
-- [ ] Deck & Client Hands
-- [ ] Slot UI Events
+- [x] Deck & Client Hands
+- [x] Slot UI Events
 - [ ] Playing a Unit
 	- [ ] Checking & Updating Energy
 	- [ ] Slot Logic

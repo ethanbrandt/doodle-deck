@@ -1,11 +1,21 @@
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
 public class GameManager : NetworkBehaviour
 {
     [SerializeField] EnergyManager energyManager;
+    [SerializeField] HandManager handManager;
 
+    [SerializeField] HandCardData[] deck;
+    
+    private readonly Stack<HandCardData> player1Deck = new Stack<HandCardData>();
+    private readonly Stack<HandCardData> player2Deck = new Stack<HandCardData>();
+    
     public static GameManager Instance { get; private set; }
+
+    public readonly Dictionary<string, UnitCardSO> cardDict = new Dictionary<string, UnitCardSO>();
     
     void Awake()
     {
@@ -15,48 +25,63 @@ public class GameManager : NetworkBehaviour
         }
         
         Instance = this;
+
+        UnitCardSO[] loadedUnits = Resources.LoadAll<UnitCardSO>("");
+
+        foreach (var unit in loadedUnits)
+        {
+            cardDict.Add(unit.cardName, unit);
+        }
     }
 
     public override void OnNetworkSpawn()
     {
         if (IsClient)
         {
-            ClientConnectRpc((int)NetworkManager.Singleton.LocalClientId);
+            NetworkCardData[] networkDeck = new NetworkCardData[deck.Length];
+
+            for (int i = 0; i < deck.Length; i++)
+            {
+                networkDeck[i] = deck[i].ToNetworkCardData();
+            }
+            print("SENDING DECK");
+            ClientConnectRpc((int)NetworkManager.Singleton.LocalClientId, networkDeck);
         }
     }
 
     [Rpc(SendTo.Server)]
-    private void ClientConnectRpc(int _clientId)
+    private void ClientConnectRpc(int _clientId, NetworkCardData[] _deck)
     {
+        NetworkCardData[] shuffledList = _deck.OrderBy(_ => Random.value).ToArray();
+        
         print(_clientId + " Connected to Server");
         if (_clientId == 1)
-            SendSecretRpc("SUPER SECRET MESSAGE MEANT ONLY FOR 1", RpcTarget.Single(1, RpcTargetUse.Temp));
-        if (_clientId == 2)
         {
-            SendSecretRpc("ALSO COOL SECRET MEANT FOR 2", RpcTarget.Single(2, RpcTargetUse.Temp));
+            foreach (var card in shuffledList)
+                player1Deck.Push(new HandCardData(card.cardName.ToString(), card.cardType));
+        }
+        else if (_clientId == 2)
+        {
             print("BOTH PLAYERS CONNECTED");
             energyManager.InitializeEnergy();
+            foreach (var card in shuffledList)
+                player2Deck.Push(new HandCardData(card.cardName.ToString(), card.cardType));
         }
     }
 
-    [Rpc(SendTo.SpecifiedInParams)]
-    private void SendSecretRpc(string _secret, RpcParams _rpcParams)
+
+    public void DrawPlayer1CardDebug()
     {
-        print(_secret);
+        handManager.DrawCardRpc(player1Deck.Pop().ToNetworkCardData(), RpcTarget.Single(1, RpcTargetUse.Temp));
     }
 
+    public void DrawPlayer2CardDebug()
+    {
+        handManager.DrawCardRpc(player2Deck.Pop().ToNetworkCardData(), RpcTarget.Single(2, RpcTargetUse.Temp));
+    }
+    
     void Update()
     {
-        if (IsServer)
-        {
-            if (Input.GetKeyDown(KeyCode.F))
-                energyManager.IncrementMaxEnergy();
-            else if (Input.GetKeyDown(KeyCode.G))
-                energyManager.ResetCurrentEnergy();
-            else if (Input.GetKeyDown(KeyCode.H))
-                energyManager.UsePlayer1Energy(1);
-            else if (Input.GetKeyDown(KeyCode.J))
-                energyManager.UsePlayer2Energy(1);
-        }
+        
     }
 }
