@@ -51,11 +51,11 @@ public class DebugUIManager : MonoBehaviour
 
     public void DrawPlayer1Card()
     {
-        GameManager.Instance.DrawPlayer1CardDebug();
+        GameManager.Instance.DrawPlayer1Card();
     }
 
     public void DrawPlayer2Card()
     {
-        GameManager.Instance.DrawPlayer2CardDebug();
+        GameManager.Instance.DrawPlayer2Card();
     }
 }

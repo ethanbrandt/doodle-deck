@@ -7,14 +7,16 @@
 - [x] Energy UI
 - [x] Deck & Client Hands
 - [x] Slot UI Events
-- [ ] Playing a Unit
-	- [ ] Checking & Updating Energy
-	- [ ] Slot Logic
-	- [ ] Spawning Unit Object
-- [ ] Moving a Unit
+- [x] Playing a Unit
+	- [x] Checking & Updating Energy
+	- [x] Slot Logic
+	- [x] Spawning Unit Object
+- [x] Moving a Unit
 - [ ] Attacking with a Unit
 	- [ ] Unit Health & Damage
 	- [ ] Player Health
+- [ ] Turn Enforcement
+- [ ] Round Logic
 - [ ] Unit Traits
 - [ ] Unit Status Effects
 - [ ] Winning / Losing

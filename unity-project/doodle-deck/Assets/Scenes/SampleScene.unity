@@ -3940,6 +3940,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   ShowTopMostFoldoutHeaderGroup: 1
+  unitCardPrefab: {fileID: 7502923602422836974, guid: 3e324d5384162f6439e2034e96403a9a, type: 3}
+  slots:
+  - {fileID: 786930619}
+  - {fileID: 1258918570}
+  - {fileID: 1849737021}
+  - {fileID: 1883172922}
+  - {fileID: 406023917}
+  - {fileID: 1699222687}
+  - {fileID: 1965914557}
+  - {fileID: 1801482405}
+  - {fileID: 1145518143}
+  - {fileID: 402722437}
+  cardHoverDist: 0.05
   energyManager: {fileID: 1604507850}
   handManager: {fileID: 22328628}
   deck:
@@ -3955,6 +3968,18 @@ MonoBehaviour:
     cardType: 0
   - cardName: 6
     cardType: 0
+  player1Units:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  player2Units:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!4 &1681902699
 Transform:
   m_ObjectHideFlags: 0

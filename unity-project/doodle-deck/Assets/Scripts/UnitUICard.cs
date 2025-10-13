@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
-public class UnitUICard : MonoBehaviour
+public class UnitUICard : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] TextMeshProUGUI cardNameText;
     [SerializeField] TextMeshProUGUI cardEnergyCostText;
@@ -12,8 +13,12 @@ public class UnitUICard : MonoBehaviour
     [SerializeField] TextMeshProUGUI cardCurrentHealthText;
     [SerializeField] Image cardImage;
 
-    public void InitializeCard(UnitCardSO _unitCard)
+    private HandManager handManager;
+    
+    public void InitializeCard(HandManager _handManager, UnitCardSO _unitCard)
     {
+        handManager = _handManager;
+        
         cardNameText.text = _unitCard.cardName;
         cardEnergyCostText.text = _unitCard.energyCost.ToString();
         cardTypeText.text = "UNIT";
@@ -23,8 +28,13 @@ public class UnitUICard : MonoBehaviour
         cardImage.sprite = _unitCard.cardImage;
     }
 
-    public void CardClicked()
+    public void OnPointerClick(PointerEventData _eventData)
     {
-        print(cardNameText.text);
+        handManager.HandleUICardClick(this);
+    }
+
+    public string GetInfo()
+    {
+        return cardNameText.text;
     }
 }

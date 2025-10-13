@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections;
 
-public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Hover Settings")]
     [SerializeField] float hoverScale = 1.15f;
@@ -39,7 +39,6 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         if (outline) outline.enabled = true;
 
         localCanvas.sortingOrder = 1000;
-        // animate up and scale
         Vector2 targetPos = baseAnchoredPos + new Vector2(0f, hoverLift);
         Vector3 targetScale = Vector3.one * hoverScale;
         StartAnim(targetPos, targetScale);
@@ -53,11 +52,6 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         StartAnim(baseAnchoredPos, baseScale);
     }
 
-    public void OnPointerClick(PointerEventData _eventData)
-    {
-        GetComponent<UnitUICard>().CardClicked();
-    }
-    
     void StartAnim(Vector2 pos, Vector3 scale)
     {
         if (anim != null) StopCoroutine(anim);
@@ -72,7 +66,7 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
         while (t < 1f)
         {
-            t += Time.unscaledDeltaTime / animTime; // UI feel independent of timescale
+            t += Time.unscaledDeltaTime / animTime;
             float e = Smooth(t);
             rt.position = Vector2.LerpUnclamped(startPos, targetPos, e);
             rt.localScale = Vector3.LerpUnclamped(startScale, targetScale, e);
