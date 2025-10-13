@@ -12,12 +12,13 @@
 	- [x] Slot Logic
 	- [x] Spawning Unit Object
 - [x] Moving a Unit
-- [ ] Attacking with a Unit
-	- [ ] Unit Health & Damage
-	- [ ] Player Health
+- [x] Attacking with a Unit
+	- [x] Unit Health & Damage
+	- [x] Player Health
+	- [x] Unit Death
+- [x] Winning / Losing
 - [ ] Turn Enforcement
 - [ ] Round Logic
 - [ ] Unit Traits
 - [ ] Unit Status Effects
-- [ ] Winning / Losing
 - [ ] Spells

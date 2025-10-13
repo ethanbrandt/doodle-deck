@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -10,6 +11,12 @@ public class GameManager : NetworkBehaviour
     [SerializeField] GameObject unitCardPrefab;
     [SerializeField] Transform[] slots;
     [SerializeField] float cardHoverDist;
+    [SerializeField] int playerStartingHealth;
+    
+    [SerializeField] TextMeshProUGUI player1HealthText;
+    [SerializeField] TextMeshProUGUI player2HealthText;
+
+    [SerializeField] TextMeshProUGUI outcomeText;
     
     [SerializeField] EnergyManager energyManager;
     [SerializeField] HandManager handManager;
@@ -24,6 +31,9 @@ public class GameManager : NetworkBehaviour
 
     public UnitCard[] player1Units = new UnitCard[5];
     public UnitCard[] player2Units = new UnitCard[5];
+
+    private int player1Health;
+    private int player2Health;
     
     public static GameManager Instance { get; private set; }
 
@@ -38,6 +48,9 @@ public class GameManager : NetworkBehaviour
         
         Instance = this;
 
+        player1Health = playerStartingHealth;
+        player2Health = playerStartingHealth;
+        
         CardBaseSO[] loadedUnits = Resources.LoadAll<CardBaseSO>("");
 
         foreach (var unit in loadedUnits)
@@ -70,6 +83,7 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     private void ClientConnectRpc(int _clientId, NetworkCardData[] _deck)
     {
+        UpdatePlayerHealthInfoRpc(player1Health, player2Health);
         print(_clientId + " Connected to Server");
         if (_clientId > 2)
         {
@@ -249,7 +263,63 @@ public class GameManager : NetworkBehaviour
 
         if (sideCards[_endSlotIndex.y])
             sideCards[_endSlotIndex.y].transform.position = slots[(_endSlotIndex.x * 5) + _endSlotIndex.y].position + new Vector3(0, cardHoverDist, 0);
-        
+    }
+
+    [Rpc(SendTo.Server)]
+    public void TryAttackUnitRpc(int _clientId, Vector2Int _attackerSlotIndex, Vector2Int _defenderSlotIndex)
+    {
+        if (_attackerSlotIndex.y != _defenderSlotIndex.y)
+        {
+            Debug.LogWarning($"Player {_clientId} ATTEMPTED TO ATTACK WRONG INDEX");
+            return;
+        }
+
+        if (_clientId != _attackerSlotIndex.x + 1)
+        {
+            Debug.LogWarning($"Player {_clientId} ATTEMPTED TO ATTACK WITH ENEMY UNIT");
+            return;
+        }
+
+        if (!IsValidSlotIndex(_attackerSlotIndex) || !IsValidSlotIndex(_defenderSlotIndex))
+            return;
+
+        UnitCard[] attackerSide = _clientId == 1 ? player1Units : player2Units;
+        UnitCard[] defenderSide = _clientId == 1 ? player2Units : player1Units;
+
+        int slotIndex = _defenderSlotIndex.y;
+        if (defenderSide[_defenderSlotIndex.y])
+        {
+            defenderSide[slotIndex].TakeDamage(attackerSide[slotIndex].GetAttackDamage());
+            attackerSide[slotIndex].TakeDamage(defenderSide[slotIndex].GetAttackDamage());
+
+            if (defenderSide[slotIndex].GetCurrentHealth() <= 0)
+            {
+                Destroy(defenderSide[slotIndex].gameObject);
+                defenderSide[slotIndex] = null;
+            }
+
+            if (attackerSide[slotIndex].GetCurrentHealth() <= 0)
+            {
+                Destroy(attackerSide[slotIndex].gameObject);
+                attackerSide[slotIndex] = null;
+            }
+        }
+        else
+        {
+            if (_clientId == 1)
+            {
+                player2Health -= attackerSide[slotIndex].GetAttackDamage();
+                if (player2Health <= 0)
+                    EndGameRpc(1);
+            }
+            else if (_clientId == 2)
+            {
+                player1Health -= attackerSide[slotIndex].GetAttackDamage();
+                if (player1Health <= 0)
+                    EndGameRpc(2);
+            }
+            UpdatePlayerHealthInfoRpc(player1Health, player2Health);
+        }
     }
 
     private bool IsValidSlotIndex(Vector2Int _slotIndex)
@@ -282,9 +352,35 @@ public class GameManager : NetworkBehaviour
         
         handManager.DrawCardRpc(cardData.ToNetworkCardData(), RpcTarget.Single(2, RpcTargetUse.Temp));
     }
-    
-    void Update()
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void UpdatePlayerHealthInfoRpc(int _player1Health, int _player2Health)
     {
+        player1HealthText.text = _player1Health.ToString();
+        player2HealthText.text = _player2Health.ToString();
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void EndGameRpc(int _winningClientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId > 2)
+        {
+            outcomeText.text = $"PLAYER {_winningClientId} WINS";
+            return;
+        }
         
+        handManager.HandleEndGame();
+        handManager.gameObject.SetActive(false);
+
+        if ((int)NetworkManager.Singleton.LocalClientId == _winningClientId)
+        {
+            outcomeText.text = "YOU WIN";
+            outcomeText.color = Color.green;
+        }
+        else
+        {
+            outcomeText.text = "YOU LOSE";
+            outcomeText.color = Color.red;
+        }
     }
 }

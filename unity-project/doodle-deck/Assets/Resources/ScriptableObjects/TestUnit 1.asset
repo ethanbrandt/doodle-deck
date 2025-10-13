@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UnitCard
   cardName: 2
   cardImage: {fileID: 21300000, guid: 87f4e207d839a194ba83d46bc49fe63f, type: 3}
-  cardDescription: TEST DESCRIPTION
-  energyCost: 4
+  cardDescription: TWO
+  energyCost: 2
   attackDamage: 2
-  maxHealth: 3
-  traits:
-  - trait: 5
-    val: 3
+  maxHealth: 2
+  traits: []

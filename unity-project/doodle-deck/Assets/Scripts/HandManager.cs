@@ -87,6 +87,7 @@ public class HandManager : NetworkBehaviour
         string cardName = _cardData.cardName.ToString();
         print("Just received data on: " + cardName + " at slot: " + _slotIndex);
 
+        int localClientID = (int)NetworkManager.Singleton.LocalClientId;
         if (selectedSlotIndex != null)
         {
             if (selectedSlotIndex.Value == _slotIndex)
@@ -98,19 +99,21 @@ public class HandManager : NetworkBehaviour
 
             if (!isSelectedSlotOccupied)
                 return;
+
             
-            if (Math.Abs(selectedSlotIndex.Value.y - _slotIndex.y) == 1)
+            if (Math.Abs(selectedSlotIndex.Value.y - _slotIndex.y) == 1 && localClientID == selectedSlotIndex.Value.x && localClientID == _slotIndex.x)
             {
-                GameManager.Instance.TryMoveUnitRpc((int)NetworkManager.Singleton.LocalClientId, selectedSlotIndex.Value, _slotIndex);
-                selectedSlotIndex = null;
-                isSelectedSlotOccupied = false;
+                GameManager.Instance.TryMoveUnitRpc(localClientID, selectedSlotIndex.Value, _slotIndex);
             }
-            else if (selectedSlotIndex.Value.y == _slotIndex.y && selectedSlotIndex.Value.x != _slotIndex.x)
+            else if (selectedSlotIndex.Value.y == _slotIndex.y && localClientID == selectedSlotIndex.Value.x + 1 && localClientID != _slotIndex.x + 1)
             {
-                // Try Attack
+                GameManager.Instance.TryAttackUnitRpc(localClientID, selectedSlotIndex.Value, _slotIndex);
             }
+            
+            selectedSlotIndex = null;
+            isSelectedSlotOccupied = false;
         }
-        else if (_slotIndex.x + 1 == (int)NetworkManager.Singleton.LocalClientId)
+        else if (_slotIndex.x + 1 == localClientID)
         {
             selectedSlotIndex = _slotIndex;
             isSelectedSlotOccupied = (cardName != "");
@@ -157,5 +160,10 @@ public class HandManager : NetworkBehaviour
                 print(clickedCard.GetInfo());
             }
         }
+    }
+
+    public void HandleEndGame()
+    {
+        handObject.SetActive(false);
     }
 }
