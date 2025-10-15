@@ -101,7 +101,7 @@ public class HandManager : NetworkBehaviour
                 return;
 
             
-            if (Math.Abs(selectedSlotIndex.Value.y - _slotIndex.y) == 1 && localClientID == selectedSlotIndex.Value.x && localClientID == _slotIndex.x)
+            if (Math.Abs(selectedSlotIndex.Value.y - _slotIndex.y) == 1 && localClientID == selectedSlotIndex.Value.x + 1 && localClientID == _slotIndex.x + 1)
             {
                 GameManager.Instance.TryMoveUnitRpc(localClientID, selectedSlotIndex.Value, _slotIndex);
             }
