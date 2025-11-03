@@ -69,7 +69,7 @@
 **Overhealth**
 	Temporary Health that cannot be replenished
 
-**Inspiration**
+**Inspired**
 	Temporary Damage buff
 
 **Intimidated**
