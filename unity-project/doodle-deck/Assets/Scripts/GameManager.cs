@@ -34,6 +34,8 @@ public class GameManager : NetworkBehaviour
 
     private int player1Health;
     private int player2Health;
+
+    private int currentPlayerTurn = 0;
     
     public static GameManager Instance { get; private set; }
 
@@ -59,6 +61,7 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+#region GAME_INTIALIZATION
     public override void OnNetworkSpawn()
     {
         if (IsClient)
@@ -102,14 +105,23 @@ public class GameManager : NetworkBehaviour
         {
             print("BOTH PLAYERS CONNECTED");
             energyManager.InitializeEnergy();
+            currentPlayerTurn = 1;
             foreach (var card in shuffledList)
                 player2Deck.Push(new HandCardData(card.cardName.ToString(), card.cardType));
         }
     }
+#endregion
 
+#region USING_CARDS
     [Rpc(SendTo.Server)]
     public void TryPlayCardRpc(int _clientId, string _cardName, Vector2Int _slotIndex)
     {
+        if (_clientId != currentPlayerTurn)
+        {
+            Debug.LogError("PLAYER TRIED TO PLAY CARD ON ENEMY TURN");
+            return;
+        }
+
         if (!cardDict.ContainsKey(_cardName))
         {
             Debug.LogError("INVALID CARD NAME TO BE PLAYED: " + _cardName);
@@ -236,6 +248,12 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void TryMoveUnitRpc(int _clientId, Vector2Int _startSlotIndex, Vector2Int _endSlotIndex)
     {
+        if (_clientId != currentPlayerTurn)
+        {
+            Debug.LogError("PLAYER TRIED TO MOVE UNIT ON ENEMY TURN");
+            return;
+        }
+
         if (_clientId != _startSlotIndex.x + 1 || _clientId != _endSlotIndex.x + 1)
         {
             Debug.LogError($"Player {_clientId} ATTEMPTED TO MOVE CARD ON ENEMY SIDE");
@@ -268,6 +286,12 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void TryAttackUnitRpc(int _clientId, Vector2Int _attackerSlotIndex, Vector2Int _defenderSlotIndex)
     {
+        if (_clientId != currentPlayerTurn)
+        {
+            Debug.LogError("PLAYER TRIED TO ATTACK WITH UNIT ON ENEMY TURN");
+            return;
+        }
+
         if (_attackerSlotIndex.y != _defenderSlotIndex.y)
         {
             Debug.LogWarning($"Player {_clientId} ATTEMPTED TO ATTACK WRONG INDEX");
@@ -352,6 +376,25 @@ public class GameManager : NetworkBehaviour
         
         handManager.DrawCardRpc(cardData.ToNetworkCardData(), RpcTarget.Single(2, RpcTargetUse.Temp));
     }
+#endregion
+
+#region GLOBAL_GAME_STATE
+    [Rpc(SendTo.Server)]
+    public void TryNextTurnRpc(int _clientId)
+    {
+        if (_clientId != currentPlayerTurn)
+        {
+            Debug.LogError("WRONG PLAYER ATTEMPTED TO GO TO NEXT TURN");
+            return;
+        }
+
+        NextTurn();
+    }
+
+    public void NextTurn()
+    {
+        currentPlayerTurn = currentPlayerTurn == 1 ? 2 : 1;
+    }
 
     [Rpc(SendTo.ClientsAndHost)]
     private void UpdatePlayerHealthInfoRpc(int _player1Health, int _player2Health)
@@ -383,4 +426,5 @@ public class GameManager : NetworkBehaviour
             outcomeText.color = Color.red;
         }
     }
+#endregion
 }

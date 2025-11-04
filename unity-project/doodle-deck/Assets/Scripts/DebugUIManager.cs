@@ -58,4 +58,9 @@ public class DebugUIManager : MonoBehaviour
     {
         GameManager.Instance.DrawPlayer2Card();
     }
+
+    public void NextTurn()
+    {
+        GameManager.Instance.NextTurn();
+    }
 }

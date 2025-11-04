@@ -19,6 +19,8 @@ public class HandManager : NetworkBehaviour
 
     private UnitUICard clickedCard;
 
+    private bool isPlayersTurn = false;
+
     private Vector2Int? selectedSlotIndex = null;
     private bool isSelectedSlotOccupied = false;
     
@@ -98,7 +100,10 @@ public class HandManager : NetworkBehaviour
             }
 
             if (!isSelectedSlotOccupied)
+            {
+                selectedSlotIndex = null;
                 return;
+            }
 
             
             if (Math.Abs(selectedSlotIndex.Value.y - _slotIndex.y) == 1 && localClientID == selectedSlotIndex.Value.x + 1 && localClientID == _slotIndex.x + 1)
@@ -127,7 +132,6 @@ public class HandManager : NetworkBehaviour
         Destroy(clickedCard.gameObject);
         clickedCard = null;
     }
-    
 
     [Rpc(SendTo.SpecifiedInParams)]
     public void DrawCardRpc(NetworkCardData _card, RpcParams _rpcParams)
@@ -138,6 +142,12 @@ public class HandManager : NetworkBehaviour
         uiCard.InitializeCard(this, (UnitCardSO)unitSO);
         uiCards.Add(uiCard);
         print(drawnCard.cardName);
+    }
+
+    [Rpc(SendTo.SpecifiedInParams)]
+    public void SetPlayerTurnRpc(bool _isPlayersTurn, RpcParams _rpcParams)
+    {
+        isPlayersTurn = _isPlayersTurn;
     }
 
     public void HandleUICardClick(UnitUICard _uiCard)

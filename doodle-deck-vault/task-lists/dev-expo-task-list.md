@@ -1,3 +1,6 @@
+#### BUGS
+- [ ] Units sometimes do not move or attack when they should (probably an issue with selecting the unit)
+
 #### Main Menu
 - [ ] Connect to Game
 - [ ] Settings
