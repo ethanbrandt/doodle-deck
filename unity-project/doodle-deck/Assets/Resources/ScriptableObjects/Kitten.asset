@@ -10,12 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29f13586310614b418b6c3c57c64eff8, type: 3}
-  m_Name: TestUnit 2
+  m_Name: Kitten
   m_EditorClassIdentifier: Assembly-CSharp::UnitCard
-  cardName: 3
-  cardImage: {fileID: 21300000, guid: 8fea89c5848d1a2429ce1282699087fa, type: 3}
-  cardDescription: THREE
-  energyCost: 3
-  attackDamage: 3
-  maxHealth: 3
-  traits: []
+  cardName: Kitten
+  cardImage: {fileID: 21300000, guid: cc33b760365302242977f514d21b7aed, type: 3}
+  cardDescription: Light Footed
+  energyCost: 2
+  attackDamage: 2
+  maxHealth: 1
+  traits:
+  - trait: 0
+    val: 0

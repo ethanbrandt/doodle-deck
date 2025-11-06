@@ -77,6 +77,8 @@ public enum TraitsEnum
 
 public enum StatusEffect
 {
+    Overhealthed,
+    Inspired,
     Fatigued,
     Intimidated,
     Warded

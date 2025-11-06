@@ -461,6 +461,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   handObject: {fileID: 1594376877}
   unitUICardPrefab: {fileID: 8668986765289168001, guid: 7466e15fa0bcfe6408aed7487d3c56cb, type: 3}
+  spellUICardPrefab: {fileID: 0}
 --- !u!1 &65127277
 GameObject:
   m_ObjectHideFlags: 0
@@ -5124,19 +5125,7 @@ MonoBehaviour:
   energyManager: {fileID: 1604507850}
   handManager: {fileID: 22328628}
   clientUIManager: {fileID: 2107251656}
-  deck:
-  - cardName: 1
-    cardType: 0
-  - cardName: 2
-    cardType: 0
-  - cardName: 3
-    cardType: 0
-  - cardName: 4
-    cardType: 0
-  - cardName: 5
-    cardType: 0
-  - cardName: 6
-    cardType: 0
+  deck: {fileID: 11400000, guid: acc4be8c0756c0142af7ac634c7c30fb, type: 2}
   player1Units:
   - {fileID: 0}
   - {fileID: 0}

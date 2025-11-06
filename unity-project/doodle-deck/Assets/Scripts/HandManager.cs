@@ -117,7 +117,6 @@ public class HandManager : NetworkBehaviour
         UnitUICard uiCard = Instantiate(unitUICardPrefab, handObject.transform).GetComponent<UnitUICard>();
         uiCard.InitializeCard(this, (UnitCardSO)unitSO);
         uiCards.Add(uiCard);
-        print(drawnCard.cardName);
     }
 
     [Rpc(SendTo.SpecifiedInParams)]

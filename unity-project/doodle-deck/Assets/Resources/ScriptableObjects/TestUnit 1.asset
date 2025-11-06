@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UnitCard
   cardName: 2
   cardImage: {fileID: 21300000, guid: 87f4e207d839a194ba83d46bc49fe63f, type: 3}
-  cardDescription: TWO
+  cardDescription: TWO (TEMP GRAND ENTRANCE (2))
   energyCost: 2
   attackDamage: 2
   maxHealth: 2
   traits:
-  - trait: 0
-    val: 0
+  - trait: 12
+    val: 2

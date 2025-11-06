@@ -23,7 +23,7 @@ public class GameManager : NetworkBehaviour
     [SerializeField] HandManager handManager;
     [SerializeField] ClientUIManager clientUIManager;
 
-    [SerializeField] HandCardData[] deck;
+    [SerializeField] DeckSO deck;
     
     private readonly Stack<HandCardData> player1Deck = new Stack<HandCardData>();
     private readonly Stack<HandCardData> player2Deck = new Stack<HandCardData>();
@@ -31,8 +31,8 @@ public class GameManager : NetworkBehaviour
     private readonly Dictionary<string, int> player1Hand = new Dictionary<string, int>();
     private readonly Dictionary<string, int> player2Hand = new Dictionary<string, int>();
 
-    public UnitCard[] player1Units = new UnitCard[5];
-    public UnitCard[] player2Units = new UnitCard[5];
+    private readonly UnitCard[] player1Units = new UnitCard[5];
+    private readonly UnitCard[] player2Units = new UnitCard[5];
 
     private int player1Health;
     private int player2Health;
@@ -75,14 +75,8 @@ public class GameManager : NetworkBehaviour
                 return;
             }
             
-            NetworkCardData[] networkDeck = new NetworkCardData[deck.Length];
-
-            for (int i = 0; i < deck.Length; i++)
-            {
-                networkDeck[i] = deck[i].ToNetworkCardData();
-            }
             print("SENDING DECK");
-            ClientConnectRpc((int)NetworkManager.Singleton.LocalClientId, networkDeck);
+            ClientConnectRpc((int)NetworkManager.Singleton.LocalClientId, deck.GetNetowrkDeck());
         }
     }
 
@@ -139,8 +133,6 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void TryPlayCardRpc(int _clientId, string _cardName, Vector2Int _slotIndex)
     {
-        
-
         if (!cardDict.ContainsKey(_cardName))
         {
             Debug.LogError("INVALID CARD NAME TO BE PLAYED: " + _cardName);
@@ -207,6 +199,7 @@ public class GameManager : NetworkBehaviour
             
             var unitCard = SpawnUnitCard(_cardName, _slotIndex);
             player1Units[_slotIndex.y] = unitCard;
+            HandleUnitPlacementTraits(1, _slotIndex.y);
         }
         
         energyManager.UsePlayer1Energy(card.energyCost);
@@ -264,6 +257,7 @@ public class GameManager : NetworkBehaviour
              
              var unitCard = SpawnUnitCard(_cardName, _slotIndex);
              player2Units[_slotIndex.y] = unitCard;
+             HandleUnitPlacementTraits(2, _slotIndex.y);
          }
          
          energyManager.UsePlayer2Energy(card.energyCost);
@@ -279,6 +273,38 @@ public class GameManager : NetworkBehaviour
         unitCard.GetComponent<NetworkObject>().Spawn(true);
         unitCard.InitializeCardRpc(new NetworkCardData(_cardName, CardType.Unit));
         return unitCard;
+    }
+
+    private void HandleUnitPlacementTraits(int _clientId, int _slotIndex)
+    {
+        UnitCard[] sideCards = _clientId == 1 ? player1Units : player2Units;
+        UnitCard[] enemySideCards = _clientId == 2 ? player1Units : player2Units;
+        UnitCardSO unitCard = (UnitCardSO)cardDict[sideCards[_slotIndex].GetCardName()];
+
+        if (unitCard.ContainsTrait(TraitsEnum.SneakAttack))
+        {
+            if (enemySideCards[_slotIndex])
+            {
+                enemySideCards[_slotIndex].TakeDamage(unitCard.GetTraitValue(TraitsEnum.SneakAttack));
+                CheckAndHandleAllUnitDeaths();
+            }
+            else
+            {
+                DealDamageToPlayer(_clientId, unitCard.GetTraitValue(TraitsEnum.SneakAttack));
+            }
+            
+        }
+
+        if (unitCard.ContainsTrait(TraitsEnum.Braced))
+        {
+            sideCards[_slotIndex].GiveOverhealth(unitCard.GetTraitValue(TraitsEnum.Braced));
+        }
+
+        if (unitCard.ContainsTrait(TraitsEnum.GrandEntrance))
+        {
+            if (enemySideCards[_slotIndex])
+                enemySideCards[_slotIndex].ApplyTempStatusEffect(StatusEffect.Intimidated, false);
+        }
     }
     
 #region SPELLS
@@ -318,6 +344,7 @@ public class GameManager : NetworkBehaviour
             return;
 
         UnitCard[] sideCards = _clientId == 1 ? player1Units : player2Units;
+        UnitCard[] enemySideCards = _clientId == 2 ? player1Units : player2Units;
         UnitCardSO unit = (UnitCardSO)cardDict[sideCards[_startSlotIndex.y].GetCardName()];
 
         if (unit.ContainsTrait(TraitsEnum.Immobile))
@@ -336,8 +363,7 @@ public class GameManager : NetworkBehaviour
             if (unit.ContainsTrait(TraitsEnum.LightFooted))
             {
                 int firstSwap = _startSlotIndex.y + (_endSlotIndex.y - _startSlotIndex.y > 0 ? 1 : -1);
-                MoveUnit(sideCards, _startSlotIndex, new Vector2Int(_endSlotIndex.x, firstSwap));
-                HandleHealingTrail(sideCards, unit, _startSlotIndex);
+                MoveUnit(_clientId, _startSlotIndex, new Vector2Int(_endSlotIndex.x, firstSwap));
                 _startSlotIndex.y = firstSwap;
             }
             else
@@ -349,13 +375,16 @@ public class GameManager : NetworkBehaviour
         
         print($"Moving card at {_startSlotIndex} to {_endSlotIndex}");
         print($"Updated transform from {sideCards[_startSlotIndex.y].transform.position} to {slots[(_startSlotIndex.x * 5) + _startSlotIndex.y].position}");
-        MoveUnit(sideCards, _startSlotIndex, _endSlotIndex);
-        HandleHealingTrail(sideCards, unit, _startSlotIndex);
         sideCards[_startSlotIndex.y].UseAction();
+        MoveUnit(_clientId, _startSlotIndex, _endSlotIndex);
     }
 
-    private void MoveUnit(UnitCard[] sideCards, Vector2Int _startSlotIndex, Vector2Int _endSlotIndex)
+    private void MoveUnit(int _clientId, Vector2Int _startSlotIndex, Vector2Int _endSlotIndex)
     {
+        UnitCard[] sideCards = _clientId == 1 ? player1Units : player2Units;
+        UnitCard[] enemySideCards = _clientId == 2 ? player1Units : player2Units;
+        UnitCardSO unit = (UnitCardSO)cardDict[sideCards[_startSlotIndex.y].GetCardName()];
+        
         (sideCards[_endSlotIndex.y], sideCards[_startSlotIndex.y]) = (sideCards[_startSlotIndex.y], sideCards[_endSlotIndex.y]); // SWAP THE CARDS SLOTS
 
         if (sideCards[_startSlotIndex.y])
@@ -363,25 +392,51 @@ public class GameManager : NetworkBehaviour
 
         if (sideCards[_endSlotIndex.y])
             sideCards[_endSlotIndex.y].transform.position = slots[(_endSlotIndex.x * 5) + _endSlotIndex.y].position + new Vector3(0, cardHoverDist, 0);
+        
+        HandleHealingTrail(unit, sideCards[_startSlotIndex.y]);
+        HandleDriveBy(_clientId, unit, _startSlotIndex.y);
+        HandleOpportunistic(sideCards, enemySideCards, _endSlotIndex.y, _startSlotIndex.y);
+        
+        CheckAndHandleAllUnitDeaths();
     }
 
-    private void HandleHealingTrail(UnitCard[] sideCards, UnitCardSO _unit, Vector2Int _movedOverSlotIndex)
+    private void HandleHealingTrail(UnitCardSO _unitCard, UnitCard _movedOverUnit)
     {
-        if (!_unit.ContainsTrait(TraitsEnum.HealingTrail))
+        if (!_unitCard.ContainsTrait(TraitsEnum.HealingTrail))
             return;
 
-        if (sideCards[_movedOverSlotIndex.y])
-            sideCards[_movedOverSlotIndex.y].Heal(_unit.GetTraitValue(TraitsEnum.HealingTrail));
+        if (_movedOverUnit)
+            _movedOverUnit.Heal(_unitCard.GetTraitValue(TraitsEnum.HealingTrail));
     }
 
-    private void HandleDriveBy(UnitCard[] enemySideCards, UnitCardSO _unit, Vector2Int _enemySlotIndex)
+    private void HandleDriveBy(int _clientId, UnitCardSO _unitCard, int _enemySlotIndex)
     {
+        if (!_unitCard.ContainsTrait(TraitsEnum.DriveBy))
+            return;
         
+        UnitCard[] enemySideCards = _clientId == 2 ? player1Units : player2Units;
+
+        if (enemySideCards[_enemySlotIndex])
+        {
+            enemySideCards[_enemySlotIndex].TakeDamage(_unitCard.GetTraitValue(TraitsEnum.DriveBy));
+        }
+        else
+        {
+            DealDamageToPlayer(_clientId, _unitCard.GetTraitValue(TraitsEnum.DriveBy));
+        }
     }
 
-    private void HandleOpportunistic()
+    private void HandleOpportunistic(UnitCard[] _sideCards, UnitCard[] _enemySideCards, int _movedCardUnitIndex, int _enemyUnitIndex)
     {
+        if (!_enemySideCards[_enemyUnitIndex])
+            return;
         
+        UnitCardSO enemyUnitCard = (UnitCardSO)cardDict[_enemySideCards[_enemyUnitIndex].GetCardName()];
+        
+        if (!enemyUnitCard.ContainsTrait(TraitsEnum.Opportunistic))
+            return;
+        
+        _sideCards[_movedCardUnitIndex].TakeDamage(enemyUnitCard.GetTraitValue(TraitsEnum.Opportunistic));
     }
     
     [Rpc(SendTo.Server)]
@@ -426,33 +481,46 @@ public class GameManager : NetworkBehaviour
             defenderSide[slotIndex].TakeDamage(attackerSide[slotIndex].GetAttackDamage());
             attackerSide[slotIndex].TakeDamage(defenderSide[slotIndex].GetAttackDamage());
 
-            if (defenderSide[slotIndex].GetCurrentHealth() <= 0)
-            {
-                Destroy(defenderSide[slotIndex].gameObject);
-                defenderSide[slotIndex] = null;
-            }
-
-            if (attackerSide[slotIndex].GetCurrentHealth() <= 0)
-            {
-                Destroy(attackerSide[slotIndex].gameObject);
-                attackerSide[slotIndex] = null;
-            }
+            CheckAndHandleAllUnitDeaths();
         }
         else
         {
-            if (_clientId == 1)
+            DealDamageToPlayer(_clientId, attackerSide[slotIndex].GetAttackDamage());
+        }
+    }
+
+    private void DealDamageToPlayer(int _attackingClientId, int _damage)
+    {
+        if (_attackingClientId == 1)
+        {
+            player2Health -= _damage;
+            if (player2Health <= 0)
+                EndGameRpc(1);
+        }
+        else if (_attackingClientId == 2)
+        {
+            player1Health -= _damage;
+            if (player1Health <= 0)
+                EndGameRpc(2);
+        }
+        UpdatePlayerHealthInfoRpc(player1Health, player2Health);
+    }
+
+    private void CheckAndHandleAllUnitDeaths()
+    {
+        for (int i = 0; i < player1Units.Length; i++)
+        {
+            if (player1Units[i] && player1Units[i].GetCurrentHealth() <= 0)
             {
-                player2Health -= attackerSide[slotIndex].GetAttackDamage();
-                if (player2Health <= 0)
-                    EndGameRpc(1);
+                Destroy(player1Units[i].gameObject);
+                player1Units[i] = null;
             }
-            else if (_clientId == 2)
+            
+            if (player2Units[i] && player2Units[i].GetCurrentHealth() <= 0)
             {
-                player1Health -= attackerSide[slotIndex].GetAttackDamage();
-                if (player1Health <= 0)
-                    EndGameRpc(2);
+                Destroy(player2Units[i].gameObject);
+                player2Units[i] = null;
             }
-            UpdatePlayerHealthInfoRpc(player1Health, player2Health);
         }
     }
 
@@ -525,13 +593,13 @@ public class GameManager : NetworkBehaviour
         {
             NextRound();
             
-            ResetUnitResources(player1Units);
+            ResetUnitResources(player1Units, player2Units);
             DrawPlayer1Card();
             energyManager.ResetPlayer1CurrentEnergy();
         }
         else if (currentPlayerTurn == 2)
         {
-            ResetUnitResources(player2Units);
+            ResetUnitResources(player2Units, player1Units);
             DrawPlayer2Card();
             energyManager.ResetPlayer2CurrentEnergy();
         }
@@ -544,15 +612,22 @@ public class GameManager : NetworkBehaviour
         energyManager.IncrementMaxEnergy();
     }
 
-    private void ResetUnitResources(UnitCard[] _units)
+    private void ResetUnitResources(UnitCard[] _playerUnits, UnitCard[] _enemyUnits)
     {
-        foreach (var unit in _units)
+        foreach (var unit in _playerUnits)
         {
             if (!unit)
                 continue;
             unit.RestoreAction();
             unit.ResetHealth();
-            // TODO RESET ALL TEMP EFFECTS
+            unit.ResetPlayerTurnTempStatusEffects();
+        }
+
+        foreach (var unit in _enemyUnits)
+        {
+            if (!unit)
+                continue;
+            unit.ResetEnemyTurnTempStatusEffects();
         }
     }
 
