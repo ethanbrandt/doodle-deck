@@ -63,8 +63,13 @@ public enum TraitsEnum
     InspiringAura,
     Shielding,
     Cleave,
+    Vampiric,
+    SneakAttack,
     Braced,
     GrandEntrance,
+    LastLaugh,
+    ExplosiveExit,
+    PartingGift,
     Overtime,
     LeftLauncher,
     RightLauncher

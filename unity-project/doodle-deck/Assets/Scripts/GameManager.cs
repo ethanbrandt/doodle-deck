@@ -12,6 +12,7 @@ public class GameManager : NetworkBehaviour
     [SerializeField] Transform[] slots;
     [SerializeField] float cardHoverDist;
     [SerializeField] int playerStartingHealth;
+    [SerializeField] int playerStartCards;
     
     [SerializeField] TextMeshProUGUI player1HealthText;
     [SerializeField] TextMeshProUGUI player2HealthText;
@@ -20,6 +21,7 @@ public class GameManager : NetworkBehaviour
     
     [SerializeField] EnergyManager energyManager;
     [SerializeField] HandManager handManager;
+    [SerializeField] ClientUIManager clientUIManager;
 
     [SerializeField] HandCardData[] deck;
     
@@ -36,6 +38,7 @@ public class GameManager : NetworkBehaviour
     private int player2Health;
 
     private int currentPlayerTurn = 0;
+    private int round = 0;
     
     public static GameManager Instance { get; private set; }
 
@@ -53,11 +56,11 @@ public class GameManager : NetworkBehaviour
         player1Health = playerStartingHealth;
         player2Health = playerStartingHealth;
         
-        CardBaseSO[] loadedUnits = Resources.LoadAll<CardBaseSO>("");
+        CardBaseSO[] loadedCards = Resources.LoadAll<CardBaseSO>("");
 
-        foreach (var unit in loadedUnits)
+        foreach (var card in loadedCards)
         {
-            cardDict.Add(unit.cardName, unit);
+            cardDict.Add(card.cardName, card);
         }
     }
 
@@ -104,10 +107,30 @@ public class GameManager : NetworkBehaviour
         else if (_clientId == 2)
         {
             print("BOTH PLAYERS CONNECTED");
-            energyManager.InitializeEnergy();
-            currentPlayerTurn = 1;
+            
             foreach (var card in shuffledList)
                 player2Deck.Push(new HandCardData(card.cardName.ToString(), card.cardType));
+        
+            InitializeFirstRound();
+        }
+    }
+
+    private void InitializeFirstRound()
+    {
+        energyManager.InitializeEnergy();
+        energyManager.ResetCurrentEnergy();
+        
+        round = 1;
+        clientUIManager.SetRoundCounterRpc(round);
+        
+        currentPlayerTurn = 1;
+        handManager.SetPlayerTurnRpc(true, RpcTarget.Single(1, RpcTargetUse.Temp));
+        handManager.SetPlayerTurnRpc(false, RpcTarget.Single(2, RpcTargetUse.Temp));
+        
+        for (int i = 0; i < playerStartCards; i++)
+        {
+            DrawPlayer1Card();
+            DrawPlayer2Card();
         }
     }
 #endregion
@@ -116,11 +139,7 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void TryPlayCardRpc(int _clientId, string _cardName, Vector2Int _slotIndex)
     {
-        if (_clientId != currentPlayerTurn)
-        {
-            Debug.LogError("PLAYER TRIED TO PLAY CARD ON ENEMY TURN");
-            return;
-        }
+        
 
         if (!cardDict.ContainsKey(_cardName))
         {
@@ -140,12 +159,12 @@ public class GameManager : NetworkBehaviour
 
     private void TryPlayPlayer1Card(string _cardName, Vector2Int _slotIndex)
     {
-        if (!player1Hand.ContainsKey(_cardName))
+        if (!player1Hand.ContainsKey(_cardName) || player1Hand[_cardName] <= 0)
         {
             print("Player 1 does not have card");
             return;
         }
-
+        
         CardBaseSO card = cardDict[_cardName];
 
         if (energyManager.Player1CurrentEnergy < card.energyCost)
@@ -154,74 +173,102 @@ public class GameManager : NetworkBehaviour
             return;
         }
 
-        if (card is not UnitCardSO)
+        if (card is SpellCardSO)
         {
-            // TODO: INSERT SPELL LOGIC HERE
-            Debug.LogWarning("UNIMPLEMENTED SPELL ATTEMPTED TO BE CAST");
-            return;
-        }
+            SpellCardSO spell = (SpellCardSO)card;
 
-        if (_slotIndex.x != 0)
+            if (currentPlayerTurn != 1 && !spell.isSwift)
+            {
+                Debug.LogError("PLAYER TRIED TO PLAY SPELL ON ENEMY TURN");
+                return;
+            }
+
+            TryUseSpell(1, spell);
+        }
+        else if (card is UnitCardSO)
         {
-            print("Player 1 Attempted to place unit in enemy territory");
-            return;
+            if (currentPlayerTurn != 1)
+            {
+                Debug.LogError("PLAYER 1 TRIED TO PLAY UNIT ON ENEMY TURN");
+                return;
+            }
+    
+            if (_slotIndex.x != 0)
+            {
+                print("Player 1 Attempted to place unit in enemy territory");
+                return;
+            }
+    
+            if (player1Units[_slotIndex.y])
+            {
+                print("Player 1 Attempted to place unit on top of other unit");
+                return;
+            }
+            
+            var unitCard = SpawnUnitCard(_cardName, _slotIndex);
+            player1Units[_slotIndex.y] = unitCard;
         }
-
-        if (player1Units[_slotIndex.y])
-        {
-            print("Player 1 Attempted to place unit on top of other unit");
-            return;
-        }
-
-        var unitCard = SpawnUnitCard(_cardName, _slotIndex);
-
+        
         energyManager.UsePlayer1Energy(card.energyCost);
-        player1Units[_slotIndex.y] = unitCard;
-        player1Hand.Remove(_cardName);
+        player1Hand[_cardName]--;
         handManager.RemoveCardFromHandRpc(RpcTarget.Single(1, RpcTargetUse.Temp));
     }
 
     private void TryPlayPlayer2Card(string _cardName, Vector2Int _slotIndex)
     {
-        if (!player2Hand.ContainsKey(_cardName))
-        {
-            print("Player 2 does not have card");
-            return;
-        }
-
-        CardBaseSO card = cardDict[_cardName];
-
-        if (energyManager.Player2CurrentEnergy < card.energyCost)
-        {
-            print("Player 2 does not have enough energy");
-            return;
-        }
-
-        if (card is not UnitCardSO)
-        {
-            // TODO: INSERT SPELL LOGIC HERE
-            Debug.LogWarning("UNIMPLEMENTED SPELL ATTEMPTED TO BE CAST");
-            return;
-        }
-
-        if (_slotIndex.x != 1)
-        {
-            print("Player 2 Attempted to place unit in enemy territory");
-            return;
-        }
-
-        if (player2Units[_slotIndex.y])
-        {
-            print("Player 2 Attempted to place unit on top of other unit");
-            return;
-        }
-
-        var unitCard = SpawnUnitCard(_cardName, _slotIndex);
-
-        energyManager.UsePlayer2Energy(card.energyCost);
-        player2Units[_slotIndex.y] = unitCard;
-        player2Hand.Remove(_cardName);
-        handManager.RemoveCardFromHandRpc(RpcTarget.Single(2, RpcTargetUse.Temp));
+         if (!player2Hand.ContainsKey(_cardName) || player2Hand[_cardName] <= 0)
+         {
+             print("Player 2 does not have card");
+             return;
+         }
+         
+         CardBaseSO card = cardDict[_cardName];
+ 
+         if (energyManager.Player2CurrentEnergy < card.energyCost)
+         {
+             print("Player 2 does not have enough energy");
+             return;
+         }
+ 
+         if (card is SpellCardSO)
+         {
+             SpellCardSO spell = (SpellCardSO)card;
+ 
+             if (currentPlayerTurn != 2 && !spell.isSwift)
+             {
+                 Debug.LogError("PLAYER TRIED TO PLAY SPELL ON ENEMY TURN");
+                 return;
+             }
+ 
+             TryUseSpell(2, spell);
+         }
+         else if (card is UnitCardSO)
+         {
+             if (currentPlayerTurn != 2)
+             {
+                 Debug.LogError("PLAYER 2 TRIED TO PLAY UNIT ON ENEMY TURN");
+                 return;
+             }
+     
+             if (_slotIndex.x != 1)
+             {
+                 print("Player 2 Attempted to place unit in enemy territory");
+                 return;
+             }
+     
+             if (player2Units[_slotIndex.y])
+             {
+                 print("Player 2 Attempted to place unit on top of other unit");
+                 return;
+             }
+             
+             var unitCard = SpawnUnitCard(_cardName, _slotIndex);
+             player2Units[_slotIndex.y] = unitCard;
+         }
+         
+         energyManager.UsePlayer2Energy(card.energyCost);
+         player2Hand[_cardName]--;
+         handManager.RemoveCardFromHandRpc(RpcTarget.Single(2, RpcTargetUse.Temp));       
     }
 
     private UnitCard SpawnUnitCard(string _cardName, Vector2Int _slotIndex)
@@ -233,6 +280,13 @@ public class GameManager : NetworkBehaviour
         unitCard.InitializeCardRpc(new NetworkCardData(_cardName, CardType.Unit));
         return unitCard;
     }
+    
+#region SPELLS
+    private bool TryUseSpell(int _clientId, SpellCardSO _spell)
+    {
+        return true;
+    }
+#endregion
 
     [Rpc(SendTo.Server)]
     public void RequestSlotInfoRpc(int _clientId, Vector2Int _slotIndex)
@@ -250,30 +304,58 @@ public class GameManager : NetworkBehaviour
     {
         if (_clientId != currentPlayerTurn)
         {
-            Debug.LogError("PLAYER TRIED TO MOVE UNIT ON ENEMY TURN");
+            Debug.LogError($"PLAYER {_clientId} TRIED TO MOVE UNIT ON ENEMY TURN");
             return;
         }
 
         if (_clientId != _startSlotIndex.x + 1 || _clientId != _endSlotIndex.x + 1)
         {
-            Debug.LogError($"Player {_clientId} ATTEMPTED TO MOVE CARD ON ENEMY SIDE");
+            Debug.LogError($"Player {_clientId} ATTEMPTED TO MOVE UNIT ON ENEMY SIDE");
             return;
         }
-
-        if (Math.Abs(_startSlotIndex.y - _endSlotIndex.y) != 1)
-        {
-            Debug.LogWarning($"Player {_clientId} ATTEMPTED TO MOVE CARD MORE THAN 1 SLOT");
-            return;
-        }
-
+        
         if (!IsValidSlotIndex(_startSlotIndex) || !IsValidSlotIndex(_endSlotIndex))
             return;
-        
-        UnitCard[] sideCards = _clientId == 1 ? player1Units : player2Units;
 
+        UnitCard[] sideCards = _clientId == 1 ? player1Units : player2Units;
+        UnitCardSO unit = (UnitCardSO)cardDict[sideCards[_startSlotIndex.y].GetCardName()];
+
+        if (unit.ContainsTrait(TraitsEnum.Immobile))
+        {
+            return;
+        }
+
+        if (!sideCards[_startSlotIndex.y].GetCanAction())
+        {
+            Debug.LogError($"Player {_clientId} ATTEMPTED TO MOVE UNIT WITHOUT ACTION");
+            return;
+        }
+        
+        if (Math.Abs(_startSlotIndex.y - _endSlotIndex.y) != 1)
+        {
+            if (unit.ContainsTrait(TraitsEnum.LightFooted))
+            {
+                int firstSwap = _startSlotIndex.y + (_endSlotIndex.y - _startSlotIndex.y > 0 ? 1 : -1);
+                MoveUnit(sideCards, _startSlotIndex, new Vector2Int(_endSlotIndex.x, firstSwap));
+                HandleHealingTrail(sideCards, unit, _startSlotIndex);
+                _startSlotIndex.y = firstSwap;
+            }
+            else
+            {
+                Debug.LogWarning($"Player {_clientId} ATTEMPTED TO MOVE UNIT MORE THAN 1 SLOT");
+                return;
+            }
+        }
         
         print($"Moving card at {_startSlotIndex} to {_endSlotIndex}");
         print($"Updated transform from {sideCards[_startSlotIndex.y].transform.position} to {slots[(_startSlotIndex.x * 5) + _startSlotIndex.y].position}");
+        MoveUnit(sideCards, _startSlotIndex, _endSlotIndex);
+        HandleHealingTrail(sideCards, unit, _startSlotIndex);
+        sideCards[_startSlotIndex.y].UseAction();
+    }
+
+    private void MoveUnit(UnitCard[] sideCards, Vector2Int _startSlotIndex, Vector2Int _endSlotIndex)
+    {
         (sideCards[_endSlotIndex.y], sideCards[_startSlotIndex.y]) = (sideCards[_startSlotIndex.y], sideCards[_endSlotIndex.y]); // SWAP THE CARDS SLOTS
 
         if (sideCards[_startSlotIndex.y])
@@ -283,12 +365,31 @@ public class GameManager : NetworkBehaviour
             sideCards[_endSlotIndex.y].transform.position = slots[(_endSlotIndex.x * 5) + _endSlotIndex.y].position + new Vector3(0, cardHoverDist, 0);
     }
 
+    private void HandleHealingTrail(UnitCard[] sideCards, UnitCardSO _unit, Vector2Int _movedOverSlotIndex)
+    {
+        if (!_unit.ContainsTrait(TraitsEnum.HealingTrail))
+            return;
+
+        if (sideCards[_movedOverSlotIndex.y])
+            sideCards[_movedOverSlotIndex.y].Heal(_unit.GetTraitValue(TraitsEnum.HealingTrail));
+    }
+
+    private void HandleDriveBy(UnitCard[] enemySideCards, UnitCardSO _unit, Vector2Int _enemySlotIndex)
+    {
+        
+    }
+
+    private void HandleOpportunistic()
+    {
+        
+    }
+    
     [Rpc(SendTo.Server)]
     public void TryAttackUnitRpc(int _clientId, Vector2Int _attackerSlotIndex, Vector2Int _defenderSlotIndex)
     {
         if (_clientId != currentPlayerTurn)
         {
-            Debug.LogError("PLAYER TRIED TO ATTACK WITH UNIT ON ENEMY TURN");
+            Debug.LogError($"PLAYER {_clientId} TRIED TO ATTACK WITH UNIT ON ENEMY TURN");
             return;
         }
 
@@ -311,7 +412,16 @@ public class GameManager : NetworkBehaviour
         UnitCard[] defenderSide = _clientId == 1 ? player2Units : player1Units;
 
         int slotIndex = _defenderSlotIndex.y;
-        if (defenderSide[_defenderSlotIndex.y])
+
+        if (!attackerSide[slotIndex].GetCanAction())
+        {
+            Debug.LogError($"PLAYER {_clientId} ATTEMPTED TO ATTACK WITH UNIT WITHOUT ACTION");
+            return;
+        }
+        
+        attackerSide[slotIndex].UseAction();
+        
+        if (defenderSide[slotIndex])
         {
             defenderSide[slotIndex].TakeDamage(attackerSide[slotIndex].GetAttackDamage());
             attackerSide[slotIndex].TakeDamage(defenderSide[slotIndex].GetAttackDamage());
@@ -359,22 +469,36 @@ public class GameManager : NetworkBehaviour
 
     public void DrawPlayer1Card()
     {
+        if (player1Deck.Count == 0)
+        {
+            Debug.LogError("PLAYER 1 ATTEMPTED TO DRAW FROM EMPTY DECK");
+            return;
+        }
+        
         HandCardData cardData = player1Deck.Pop();
 
         if (!player1Hand.TryAdd(cardData.cardName, 1))
             player1Hand[cardData.cardName]++;
         
         handManager.DrawCardRpc(cardData.ToNetworkCardData(), RpcTarget.Single(1, RpcTargetUse.Temp));
+        print("Player 1 Deck Length: " + player1Deck.Count);
     }
 
     public void DrawPlayer2Card()
     {
+        if (player2Deck.Count == 0)
+        {
+            Debug.LogError("PLAYER 2 ATTEMPTED TO DRAW FROM EMPTY DECK");
+            return;
+        }
+        
         HandCardData cardData = player2Deck.Pop();
         
         if (!player2Hand.TryAdd(cardData.cardName, 1))
             player2Hand[cardData.cardName]++;
         
         handManager.DrawCardRpc(cardData.ToNetworkCardData(), RpcTarget.Single(2, RpcTargetUse.Temp));
+        print("Player 2 Deck Length: " + player2Deck.Count);
     }
 #endregion
 
@@ -393,7 +517,43 @@ public class GameManager : NetworkBehaviour
 
     public void NextTurn()
     {
+        handManager.SetPlayerTurnRpc(false, RpcTarget.Single((ulong)currentPlayerTurn, RpcTargetUse.Temp));
         currentPlayerTurn = currentPlayerTurn == 1 ? 2 : 1;
+        handManager.SetPlayerTurnRpc(true, RpcTarget.Single((ulong)currentPlayerTurn, RpcTargetUse.Temp));
+
+        if (currentPlayerTurn == 1)
+        {
+            NextRound();
+            
+            ResetUnitResources(player1Units);
+            DrawPlayer1Card();
+            energyManager.ResetPlayer1CurrentEnergy();
+        }
+        else if (currentPlayerTurn == 2)
+        {
+            ResetUnitResources(player2Units);
+            DrawPlayer2Card();
+            energyManager.ResetPlayer2CurrentEnergy();
+        }
+    }
+
+    private void NextRound()
+    {
+        round++;
+        clientUIManager.SetRoundCounterRpc(round);
+        energyManager.IncrementMaxEnergy();
+    }
+
+    private void ResetUnitResources(UnitCard[] _units)
+    {
+        foreach (var unit in _units)
+        {
+            if (!unit)
+                continue;
+            unit.RestoreAction();
+            unit.ResetHealth();
+            // TODO RESET ALL TEMP EFFECTS
+        }
     }
 
     [Rpc(SendTo.ClientsAndHost)]

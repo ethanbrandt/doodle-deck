@@ -18,4 +18,6 @@ MonoBehaviour:
   energyCost: 3
   attackDamage: 3
   maxHealth: 3
-  traits: []
+  traits:
+  - trait: 1
+    val: 2

@@ -34,10 +34,20 @@ public class EnergyManager : NetworkBehaviour
 
     public void IncrementMaxEnergy()
     {
+        IncrementPlayer1MaxEnergy();
+        IncrementPlayer2MaxEnergy();
+    }
+
+    public void IncrementPlayer1MaxEnergy()
+    {
         if (Player1MaxEnergy < 10)
             SpawnPlayer1EnergyIndicator(Player1MaxEnergy);
+    }
+
+    public void IncrementPlayer2MaxEnergy()
+    {
         if (Player2MaxEnergy < 10)
-            SpawnPlayer2EnergyIndicator(Player2MaxEnergy);
+            SpawnPlayer2EnergyIndicator(Player2MaxEnergy);   
     }
 
     private void SpawnPlayer1EnergyIndicator(int i)
@@ -57,17 +67,25 @@ public class EnergyManager : NetworkBehaviour
         spawnedObject.GetComponent<NetworkObject>().Spawn(true);
         player2EnergyIndicators.Add(spawnedObject.GetComponent<EnergyIndicator>());
     }
-
+    
     public void ResetCurrentEnergy()
     {
-        player1CurrentEnergy = Player1MaxEnergy;
+        ResetPlayer1CurrentEnergy();
+        ResetPlayer2CurrentEnergy();
+    }
+
+    public void ResetPlayer2CurrentEnergy()
+    {
         player2CurrentEnergy = Player2MaxEnergy;
-
-        foreach (var indicator in player1EnergyIndicators)
-            indicator.TurnOnRpc();
-
         foreach (var indicator in player2EnergyIndicators)
             indicator.TurnOnRpc();
+    }
+
+    public void ResetPlayer1CurrentEnergy()
+    {
+        player1CurrentEnergy = Player1MaxEnergy;
+        foreach (var indicator in player1EnergyIndicators)
+            indicator.TurnOnRpc(); 
     }
 
     public bool UsePlayer1Energy(int _energyUsed)

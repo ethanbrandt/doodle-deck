@@ -16,8 +16,11 @@ public class UnitCard : NetworkBehaviour
     
     private NetworkVariable<int> currentHealth = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     private int maxHealth;
-    private int attackDamage;
+    private NetworkVariable<int> attackDamage = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     private string cardName;
+    private NetworkVariable<bool> canAction = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    private int overhealth = 0;
+    private int inspiration = 0;
 
     [Rpc(SendTo.Everyone)]
     public void InitializeCardRpc(NetworkCardData _cardData)
@@ -41,8 +44,10 @@ public class UnitCard : NetworkBehaviour
             cardName = unitSO.cardName;
             currentHealth.Value = unitSO.maxHealth;
             maxHealth = unitSO.maxHealth;
-            attackDamage = unitSO.attackDamage;
+            attackDamage.Value = unitSO.attackDamage;
+            canAction.Value = true;
         }
+        
     }
 
     public int GetCurrentHealth()
@@ -52,7 +57,7 @@ public class UnitCard : NetworkBehaviour
 
     public int GetAttackDamage()
     {
-        return attackDamage;
+        return attackDamage.Value;
     }
 
     public string GetCardName()
@@ -60,10 +65,25 @@ public class UnitCard : NetworkBehaviour
         return cardName;
     }
 
+    public bool GetCanAction()
+    {
+        return canAction.Value;
+    }
+
+    public void UseAction()
+    {
+        canAction.Value = false;
+    }
+
+    public void RestoreAction()
+    {
+        canAction.Value = true;
+    }
+
     public void ResetHealth()
     {
         currentHealth.Value = maxHealth;
-        UpdateUIRpc();
+        UpdateUIRpc(currentHealth.Value, attackDamage.Value, canAction.Value);
     }
 
     public void TakeDamage(int _incomingDamage)
@@ -71,19 +91,20 @@ public class UnitCard : NetworkBehaviour
         currentHealth.Value -= _incomingDamage;
         if (currentHealth.Value <= 0)
             print(cardNameText.text + " DIED");
-        UpdateUIRpc();
+        UpdateUIRpc(currentHealth.Value, attackDamage.Value, canAction.Value);
     }
 
     public void Heal(int _incomingHealing)
     {
+        print(cardName + " healed for: " + _incomingHealing);
         currentHealth.Value = Math.Min(maxHealth, currentHealth.Value + _incomingHealing);
-        UpdateUIRpc();
+        UpdateUIRpc(currentHealth.Value, attackDamage.Value, canAction.Value);
     }
 
     [Rpc(SendTo.ClientsAndHost)]
-    private void UpdateUIRpc()
+    private void UpdateUIRpc(int _currentHealth, int _attackDamage, bool _canAction)
     {
-        cardCurrentHealthText.text = currentHealth.Value.ToString();
-        cardAttackDamageText.text = attackDamage.ToString();
+        cardCurrentHealthText.text = _currentHealth.ToString();
+        cardAttackDamageText.text = _attackDamage.ToString();
     }
 }

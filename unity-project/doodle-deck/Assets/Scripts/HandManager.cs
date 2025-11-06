@@ -7,55 +7,40 @@ using UnityEngine.EventSystems;
 
 public class HandManager : NetworkBehaviour
 {
-    [SerializeField] Camera cam1;
-    [SerializeField] Camera cam2;
-    [SerializeField] TextMeshProUGUI playerNumText;
     [SerializeField] GameObject handObject;
     [SerializeField] GameObject unitUICardPrefab;
+    [SerializeField] GameObject spellUICardPrefab;
     
-    private List<UnitUICard> uiCards = new List<UnitUICard>();
-    
-    private Camera mainCam;
+    private List<UICard> uiCards = new List<UICard>();
 
-    private UnitUICard clickedCard;
+    private ClientUIManager clientUIManager;
+    
+    private Camera mainCam = null;
+
+    private UICard clickedCard;
 
     private bool isPlayersTurn = false;
 
     private Vector2Int? selectedSlotIndex = null;
-    private bool isSelectedSlotOccupied = false;
-    
+
     public override void OnNetworkSpawn()
     {
-        if (IsServer)
-        {
-            playerNumText.text = "Server";
-            return;
-        }
-        print("CONNECTED");
-        if (NetworkManager.Singleton.LocalClientId == 1)
-        {
-            cam2.enabled = false;
-            mainCam = cam1;
-            playerNumText.text = "Player " + NetworkManager.Singleton.LocalClientId;
-        }
-        else if (NetworkManager.Singleton.LocalClientId == 2)
-        {
-            cam1.enabled = false;
-            mainCam = cam2;
-            playerNumText.text = "Player " + NetworkManager.Singleton.LocalClientId;
-        }
-        else
-        {
-            playerNumText.text = "Spectator " + (NetworkManager.Singleton.LocalClientId - 2);
-            cam2.enabled = false;
+        if (NetworkManager.LocalClientId > 2)
             gameObject.SetActive(false);
-        }
+    }
+
+    private void Start()
+    {
+        clientUIManager = FindFirstObjectByType<ClientUIManager>();
     }
 
     void Update()
     {
         if (IsClient)
         {
+            if (!mainCam)
+                mainCam = Camera.main;
+            
             if (Input.GetMouseButtonDown(0) && EventSystem.current && !EventSystem.current.IsPointerOverGameObject())
             {
                 Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
@@ -95,18 +80,10 @@ public class HandManager : NetworkBehaviour
             if (selectedSlotIndex.Value == _slotIndex)
             {
                 selectedSlotIndex = null;
-                isSelectedSlotOccupied = false;
                 return;
             }
 
-            if (!isSelectedSlotOccupied)
-            {
-                selectedSlotIndex = null;
-                return;
-            }
-
-            
-            if (Math.Abs(selectedSlotIndex.Value.y - _slotIndex.y) == 1 && localClientID == selectedSlotIndex.Value.x + 1 && localClientID == _slotIndex.x + 1)
+            if (Math.Abs(selectedSlotIndex.Value.y - _slotIndex.y) <= 2 && localClientID == selectedSlotIndex.Value.x + 1 && localClientID == _slotIndex.x + 1)
             {
                 GameManager.Instance.TryMoveUnitRpc(localClientID, selectedSlotIndex.Value, _slotIndex);
             }
@@ -116,12 +93,10 @@ public class HandManager : NetworkBehaviour
             }
             
             selectedSlotIndex = null;
-            isSelectedSlotOccupied = false;
         }
-        else if (_slotIndex.x + 1 == localClientID)
+        else if (_slotIndex.x + 1 == localClientID && cardName != "")
         {
             selectedSlotIndex = _slotIndex;
-            isSelectedSlotOccupied = (cardName != "");
         }
     }
 
@@ -136,6 +111,7 @@ public class HandManager : NetworkBehaviour
     [Rpc(SendTo.SpecifiedInParams)]
     public void DrawCardRpc(NetworkCardData _card, RpcParams _rpcParams)
     {
+        print("DRAWN CARD: " + _card.cardName);
         HandCardData drawnCard = new HandCardData(_card.cardName.ToString(), _card.cardType);
         var unitSO = GameManager.Instance.cardDict[drawnCard.cardName];
         UnitUICard uiCard = Instantiate(unitUICardPrefab, handObject.transform).GetComponent<UnitUICard>();
@@ -148,9 +124,16 @@ public class HandManager : NetworkBehaviour
     public void SetPlayerTurnRpc(bool _isPlayersTurn, RpcParams _rpcParams)
     {
         isPlayersTurn = _isPlayersTurn;
+
+        clientUIManager.EnableNextTurnButton(isPlayersTurn);
+        if (isPlayersTurn)
+        {
+            print("PLAYER'S TURN");
+            //* RESET UNIT ACTIONS
+        }
     }
 
-    public void HandleUICardClick(UnitUICard _uiCard)
+    public void HandleUICardClick(UICard _uiCard)
     {
         if (clickedCard == null)
         {
