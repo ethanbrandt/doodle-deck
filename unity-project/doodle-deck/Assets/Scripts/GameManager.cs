@@ -285,7 +285,7 @@ public class GameManager : NetworkBehaviour
         {
             if (enemySideCards[_slotIndex])
             {
-                enemySideCards[_slotIndex].TakeDamage(unitCard.GetTraitValue(TraitsEnum.SneakAttack));
+                DealDamageToUnit(enemySideCards, _slotIndex, unitCard.GetTraitValue(TraitsEnum.SneakAttack));
                 CheckAndHandleAllUnitDeaths();
             }
             else
@@ -344,7 +344,6 @@ public class GameManager : NetworkBehaviour
             return;
 
         UnitCard[] sideCards = _clientId == 1 ? player1Units : player2Units;
-        UnitCard[] enemySideCards = _clientId == 2 ? player1Units : player2Units;
         UnitCardSO unit = (UnitCardSO)cardDict[sideCards[_startSlotIndex.y].GetCardName()];
 
         if (unit.ContainsTrait(TraitsEnum.Immobile))
@@ -418,7 +417,7 @@ public class GameManager : NetworkBehaviour
 
         if (enemySideCards[_enemySlotIndex])
         {
-            enemySideCards[_enemySlotIndex].TakeDamage(_unitCard.GetTraitValue(TraitsEnum.DriveBy));
+            DealDamageToUnit(enemySideCards, _enemySlotIndex, _unitCard.GetTraitValue(TraitsEnum.DriveBy));
         }
         else
         {
@@ -436,9 +435,9 @@ public class GameManager : NetworkBehaviour
         if (!enemyUnitCard.ContainsTrait(TraitsEnum.Opportunistic))
             return;
         
-        _sideCards[_movedCardUnitIndex].TakeDamage(enemyUnitCard.GetTraitValue(TraitsEnum.Opportunistic));
+        DealDamageToUnit(_sideCards, _movedCardUnitIndex, enemyUnitCard.GetTraitValue(TraitsEnum.Opportunistic));
     }
-    
+
     [Rpc(SendTo.Server)]
     public void TryAttackUnitRpc(int _clientId, Vector2Int _attackerSlotIndex, Vector2Int _defenderSlotIndex)
     {
@@ -473,19 +472,35 @@ public class GameManager : NetworkBehaviour
             Debug.LogError($"PLAYER {_clientId} ATTEMPTED TO ATTACK WITH UNIT WITHOUT ACTION");
             return;
         }
-        
+
         attackerSide[slotIndex].UseAction();
-        
+
         if (defenderSide[slotIndex])
         {
-            defenderSide[slotIndex].TakeDamage(attackerSide[slotIndex].GetAttackDamage());
-            attackerSide[slotIndex].TakeDamage(defenderSide[slotIndex].GetAttackDamage());
+            DealDamageToUnit(defenderSide, slotIndex, attackerSide[slotIndex].GetAttackDamage());
+            DealDamageToUnit(attackerSide, slotIndex, defenderSide[slotIndex].GetAttackDamage());
 
             CheckAndHandleAllUnitDeaths();
         }
         else
         {
             DealDamageToPlayer(_clientId, attackerSide[slotIndex].GetAttackDamage());
+        }
+    }
+    
+    private void DealDamageToUnit(UnitCard[] _sideCards, int _unitToDamageIndex, int _incomingDamage)
+    {
+        if (_unitToDamageIndex > 0 && ((UnitCardSO)cardDict[_sideCards[_unitToDamageIndex - 1].GetCardName()]).ContainsTrait(TraitsEnum.Shielding))
+        {
+            _sideCards[_unitToDamageIndex - 1].TakeDamage(_incomingDamage);
+        }
+        else if (_unitToDamageIndex < 4 && ((UnitCardSO)cardDict[_sideCards[_unitToDamageIndex + 1].GetCardName()]).ContainsTrait(TraitsEnum.Shielding))
+        {
+            _sideCards[_unitToDamageIndex + 1].TakeDamage(_incomingDamage);
+        }
+        else
+        {
+            _sideCards[_unitToDamageIndex].TakeDamage(_incomingDamage);
         }
     }
 
@@ -520,6 +535,45 @@ public class GameManager : NetworkBehaviour
             {
                 Destroy(player2Units[i].gameObject);
                 player2Units[i] = null;
+            }
+        }
+    }
+
+    private void StartPositionTraits(UnitCard[] _sideCards)
+    {
+        for (int i = 0; i < _sideCards.Length; i++)
+        {
+            if (!_sideCards[i])
+                continue;
+
+            if (i > 0 && _sideCards[i - 1])
+            {
+                UnitCardSO leftUnit = (UnitCardSO)cardDict[_sideCards[i - 1].GetCardName()];
+
+                if (leftUnit.ContainsTrait(TraitsEnum.ProtectiveAura))
+                {
+                    _sideCards[i].GiveOverhealth(leftUnit.GetTraitValue(TraitsEnum.ProtectiveAura));
+                }
+
+                if (leftUnit.ContainsTrait(TraitsEnum.InspiringAura))
+                {
+                    _sideCards[i].GiveInspiration(leftUnit.GetTraitValue(TraitsEnum.InspiringAura), true);
+                }
+            }
+
+            if (i < 4 && _sideCards[i + 1])
+            {
+                UnitCardSO rightUnit = (UnitCardSO)cardDict[_sideCards[i + 1].GetCardName()];
+
+                if (rightUnit.ContainsTrait(TraitsEnum.InspiringAura))
+                {
+                    _sideCards[i].GiveInspiration(rightUnit.GetTraitValue(TraitsEnum.InspiringAura), true);
+                }
+
+                if (rightUnit.ContainsTrait(TraitsEnum.ProtectiveAura))
+                {
+                    _sideCards[i].GiveOverhealth(rightUnit.GetTraitValue(TraitsEnum.ProtectiveAura));
+                }
             }
         }
     }
@@ -592,14 +646,16 @@ public class GameManager : NetworkBehaviour
         if (currentPlayerTurn == 1)
         {
             NextRound();
-            
+
             ResetUnitResources(player1Units, player2Units);
+            StartPositionTraits(player1Units);
             DrawPlayer1Card();
             energyManager.ResetPlayer1CurrentEnergy();
         }
         else if (currentPlayerTurn == 2)
         {
             ResetUnitResources(player2Units, player1Units);
+            StartPositionTraits(player2Units);
             DrawPlayer2Card();
             energyManager.ResetPlayer2CurrentEnergy();
         }

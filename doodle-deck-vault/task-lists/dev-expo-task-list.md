@@ -33,10 +33,10 @@
 	- [x] Drive By
 	- [x] Opportunistic
 	- [x] Immobile
-- [ ] Positional Traits
-	- [ ] Protective Aura
-	- [ ] Inspiring Aura
-	- [ ] Shielding
+- [x] Positional Traits
+	- [x] Protective Aura
+	- [x] Inspiring Aura
+	- [x] Shielding
 - [ ] Attack Traits
 	- [ ] Cleave
 	- [ ] Vampiric
@@ -55,9 +55,9 @@
 ##### Unit Status Effects
 - [x] Overhealth
 - [x] Inspiration
-- [x] Fatigued
+- [ ] Fatigued (TEST)
 - [x] Intimidated
-- [x] Warded
+- [ ] Warded (TEST)
 
 #### Implementations
 ##### Units
