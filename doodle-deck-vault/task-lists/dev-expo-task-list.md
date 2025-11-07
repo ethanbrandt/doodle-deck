@@ -67,10 +67,10 @@
 - [ ] Forest Spirit
 - [ ] Golem
 - [ ] Bat
-- [ ] Petty Thief
+- [ ] Demon
 - [ ] Rightapult
 - [ ] Leftapult
-- [ ] Stone Barrier
+- [ ] Boulder
 - [ ] Fleet Captain
 - [ ] Lumberjack
 - [ ] Grave Robber
@@ -104,46 +104,46 @@
 
 #### Doodles
 ##### Units
-- [ ] Goblin
-- [ ] Haybale
-- [ ] Kitten
-- [ ] Forest Spirit
-- [ ] Golem
-- [ ] Bat
-- [ ] Petty Thief
-- [ ] Rightapult
-- [ ] Leftapult
-- [ ] Stone Barrier
-- [ ] Fleet Captain
-- [ ] Lumberjack
-- [ ] Grave Robber
-- [ ] Thief Boss
-- [ ] Druid Apprentice
+- [x] Goblin
+- [x] Haybale
+- [x] Kitten
+- [x] Forest Spirit
+- [x] Golem
+- [x] Bat
+- [x] Demon
+- [x] Rightapult
+- [x] Leftapult
+- [x] Boulder
+- [x] Fleet Captain
+- [x] Lumberjack
+- [x] Grave Robber
+- [x] Arch Demon
+- [x] Druid Apprentice
 - [ ] Goblin Addict
-- [ ] Bear
-- [ ] Royal Guard
-- [ ] Reaper
-- [ ] Assassin
-- [ ] Commander
-- [ ] Druid Master
+- [x] Bear
+- [x] Royal Guard
+- [x] Reaper
+- [x] Assassin
+- [x] Commander
+- [x] Druid Master
 
 ##### Spells
 - [ ] Inspiration
 - [ ] Grand Inspiration
-- [ ] Coffee
-- [ ] Teleport
-- [ ] Quick Teleport
-- [ ] Dart
-- [ ] Arrow
-- [ ] Fireball
-- [ ] Threaten
+- [x] Coffee
+- [x] Teleport
+- [x] Quick Teleport
+- [x] Dart
+- [x] Arrow
+- [x] Fireball
+- [x] Threaten
 - [ ] Recall
-- [ ] Bathe
+- [x] Bathe
 - [ ] Warding Word
 - [ ] Healing Whisper
 - [ ] Healing Shout
-- [ ] Sandvich
-- [ ] Buffet
+- [x] Sandvich
+- [x] Feast
 
 #### Polish
 ##### Important
