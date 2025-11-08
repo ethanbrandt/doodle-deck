@@ -116,6 +116,7 @@ public class HandManager : NetworkBehaviour
         var unitSO = GameManager.Instance.cardDict[drawnCard.cardName];
         UnitUICard uiCard = Instantiate(unitUICardPrefab, handObject.transform).GetComponent<UnitUICard>();
         uiCard.InitializeCard(this, (UnitCardSO)unitSO);
+        uiCard.SetOutline(false);
         uiCards.Add(uiCard);
     }
 
@@ -137,18 +138,22 @@ public class HandManager : NetworkBehaviour
         if (clickedCard == null)
         {
             clickedCard = _uiCard;
+            clickedCard.SetOutline(true);
             print(clickedCard.GetInfo());
         }
         else
         {
             if (_uiCard == clickedCard)
             {
+                clickedCard.SetOutline(false);
                 clickedCard = null;
                 print("clickCard set null");
             }
             else
             {
+                clickedCard.SetOutline(false);
                 clickedCard = _uiCard;
+                clickedCard.SetOutline(true);
                 print(clickedCard.GetInfo());
             }
         }

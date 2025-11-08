@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29f13586310614b418b6c3c57c64eff8, type: 3}
-  m_Name: Grave Robber
+  m_Name: Arch Demon
   m_EditorClassIdentifier: Assembly-CSharp::UnitCard
-  cardName: Grave Robber
-  cardImage: {fileID: 535731072, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
-  cardDescription: Sneak Attack(1), Opportunistic(1)
-  energyCost: 4
-  attackDamage: 3
+  cardName: Arch Demon
+  cardImage: {fileID: 986846465, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
+  cardDescription: Sneak Attack(2), Drive By(2)
+  energyCost: 5
+  attackDamage: 4
   maxHealth: 2
   traits:
   - trait: 10
-    val: 1
-  - trait: 3
-    val: 1
+    val: 2
+  - trait: 2
+    val: 2

@@ -14,6 +14,12 @@ public class UnitCard : NetworkBehaviour
     [SerializeField] TextMeshProUGUI cardAttackDamageText;
     [SerializeField] TextMeshProUGUI cardCurrentHealthText;
     [SerializeField] Image cardImage;
+
+    [Header("Status Effects")]
+    [SerializeField] Image[] statusEffectIndicators;
+    [SerializeField] Sprite wardIndicatorSprite;
+    [SerializeField] Sprite intimidateIndicatorSprite;
+    [SerializeField] Sprite fatigueIndicatorSprite;
     
     private int currentHealth = 0;
     private int maxHealth;
@@ -33,6 +39,9 @@ public class UnitCard : NetworkBehaviour
         print(_cardData.cardName.ToString() + " : " + IsServer);
         UnitCardSO unitSO = (UnitCardSO)GameManager.Instance.cardDict[_cardData.cardName.ToString()];
         
+        foreach (var indicator in statusEffectIndicators)
+            indicator.enabled = false;
+
         if (IsClient)
         {
             cardNameText.text = unitSO.cardName;
@@ -57,6 +66,8 @@ public class UnitCard : NetworkBehaviour
 
     public int GetCurrentHealth()
     {
+        if (currentHealth <= 0 && overhealth > 0)
+            return overhealth;
         return currentHealth;
     }
 
@@ -97,13 +108,13 @@ public class UnitCard : NetworkBehaviour
         UpdateUI();
     }
 
-    public void GiveOverhealth(int _incomingOverhealth)
+    public void GiveOverhealth(int _incomingOverhealth, bool _isPlayerTurn)
     {
         if (_incomingOverhealth <= 0)
             return;
         
         overhealth += _incomingOverhealth;
-        statusEffectTracker.TryAdd(StatusEffect.Overhealthed, false);
+        statusEffectTracker.TryAdd(StatusEffect.Overhealthed, _isPlayerTurn);
         UpdateUI();
     }
 
@@ -130,6 +141,12 @@ public class UnitCard : NetworkBehaviour
             statusEffectTracker.Remove(StatusEffect.Inspired);
             inspiration = 0;
         }
+        
+        if (statusEffectTracker.ContainsKey(StatusEffect.Overhealthed) && statusEffectTracker[StatusEffect.Overhealthed])
+        {
+            statusEffectTracker.Remove(StatusEffect.Overhealthed);
+            overhealth = 0;
+        }
 
         foreach ((StatusEffect effect, bool wasAppliedOnPlayerTurn) in statusEffectTracker)
         {
@@ -146,6 +163,12 @@ public class UnitCard : NetworkBehaviour
         {
             statusEffectTracker.Remove(StatusEffect.Inspired);
             inspiration = 0;
+        }
+
+        if (statusEffectTracker.ContainsKey(StatusEffect.Overhealthed) && !statusEffectTracker[StatusEffect.Overhealthed])
+        {
+            statusEffectTracker.Remove(StatusEffect.Overhealthed);
+            overhealth = 0;
         }
 
         StatusEffect[] effectsToRemove = new StatusEffect[statusEffectTracker.Count];
@@ -165,11 +188,12 @@ public class UnitCard : NetworkBehaviour
         UpdateUI();
     }
 
-    public void TakeDamage(int _incomingDamage)
+    public bool TakeDamage(int _incomingDamage)
     {
         if (statusEffectTracker.ContainsKey(StatusEffect.Warded))
         {
             statusEffectTracker.Remove(StatusEffect.Warded);
+            return false;
         }
         else if (overhealth > 0)
         {
@@ -189,6 +213,7 @@ public class UnitCard : NetworkBehaviour
         if (currentHealth <= 0)
             print(cardNameText.text + " DIED");
         UpdateUI();
+        return true;
     }
 
     public void Heal(int _incomingHealing)
@@ -230,5 +255,29 @@ public class UnitCard : NetworkBehaviour
         
         cardAttackDamageText.text = _displayAttackDamage.ToString();
         cardAttackDamageText.color = ContainsStatusEffect(_statusEffects, StatusEffect.Inspired) ? new Color(0.95f, 0.95f, 0.7f) : Color.white;
+
+        foreach (var indicator in statusEffectIndicators)
+            indicator.enabled = false;
+
+        int i = 0;
+        if (ContainsStatusEffect(_statusEffects, StatusEffect.Warded))
+        {
+            statusEffectIndicators[i].enabled = true;
+            statusEffectIndicators[i].sprite = wardIndicatorSprite;
+            i++;
+        }
+
+        if (ContainsStatusEffect(_statusEffects, StatusEffect.Intimidated))
+        {
+            statusEffectIndicators[i].enabled = true;
+            statusEffectIndicators[i].sprite = intimidateIndicatorSprite;
+            i++;
+        }
+
+        if (ContainsStatusEffect(_statusEffects, StatusEffect.Fatigued))
+        {
+            statusEffectIndicators[i].enabled = true;
+            statusEffectIndicators[i].sprite = fatigueIndicatorSprite;
+        }
     }
 }

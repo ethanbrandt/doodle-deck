@@ -10,6 +10,8 @@ public abstract class UICard : MonoBehaviour, IPointerClickHandler
     [SerializeField] protected TextMeshProUGUI cardTypeText;
     [SerializeField] protected TextMeshProUGUI cardDescriptionText;
     [SerializeField] protected Image cardImage;
+
+    [SerializeField] protected Outline cardOutline;
     
     protected HandManager handManager;
 
@@ -29,9 +31,14 @@ public abstract class UICard : MonoBehaviour, IPointerClickHandler
     {
         handManager.HandleUICardClick(this);
     }
-    
+
     public string GetInfo()
     {
         return cardNameText.text;
+    }
+    
+    public void SetOutline(bool _enableOutline)
+    {
+        cardOutline.enabled = _enableOutline;
     }
 }

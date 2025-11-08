@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.XR;
 using Random = UnityEngine.Random;
 
 public class GameManager : NetworkBehaviour
@@ -297,7 +299,7 @@ public class GameManager : NetworkBehaviour
 
         if (unitCard.ContainsTrait(TraitsEnum.Braced))
         {
-            sideCards[_slotIndex].GiveOverhealth(unitCard.GetTraitValue(TraitsEnum.Braced));
+            sideCards[_slotIndex].GiveOverhealth(unitCard.GetTraitValue(TraitsEnum.Braced), true);
         }
 
         if (unitCard.ContainsTrait(TraitsEnum.GrandEntrance))
@@ -475,32 +477,83 @@ public class GameManager : NetworkBehaviour
 
         attackerSide[slotIndex].UseAction();
 
+        UnitCardSO unitCard = (UnitCardSO)cardDict[attackerSide[slotIndex].GetCardName()];
+
         if (defenderSide[slotIndex])
         {
-            DealDamageToUnit(defenderSide, slotIndex, attackerSide[slotIndex].GetAttackDamage());
+            bool x = DealDamageToUnit(defenderSide, slotIndex, attackerSide[slotIndex].GetAttackDamage());
             DealDamageToUnit(attackerSide, slotIndex, defenderSide[slotIndex].GetAttackDamage());
+
+            HandleVampiric(unitCard, attackerSide[slotIndex], x ? attackerSide[slotIndex].GetAttackDamage() : 0);
 
             CheckAndHandleAllUnitDeaths();
         }
         else
         {
             DealDamageToPlayer(_clientId, attackerSide[slotIndex].GetAttackDamage());
+
+            HandleVampiric(unitCard, attackerSide[slotIndex], attackerSide[slotIndex].GetAttackDamage());
+        }
+
+        if (unitCard.ContainsTrait(TraitsEnum.Cleave))
+        {
+            if (slotIndex > 0)
+            {
+                if (defenderSide[slotIndex - 1])
+                {
+                    bool x = DealDamageToUnit(defenderSide, slotIndex - 1, attackerSide[slotIndex].GetAttackDamage());
+
+                    HandleVampiric(unitCard, attackerSide[slotIndex], x ? attackerSide[slotIndex].GetAttackDamage() : 0);
+
+                    CheckAndHandleAllUnitDeaths();
+                }
+                else
+                {
+                    DealDamageToPlayer(_clientId, attackerSide[slotIndex].GetAttackDamage());
+
+                    HandleVampiric(unitCard, attackerSide[slotIndex], attackerSide[slotIndex].GetAttackDamage());
+                }
+            }
+
+            if (slotIndex < 4)
+            {
+                if (defenderSide[slotIndex + 1])
+                {
+                    bool x = DealDamageToUnit(defenderSide, slotIndex + 1, attackerSide[slotIndex].GetAttackDamage());
+
+                    HandleVampiric(unitCard, attackerSide[slotIndex], x ? attackerSide[slotIndex].GetAttackDamage() : 0);
+
+                    CheckAndHandleAllUnitDeaths();
+                }
+                else
+                {
+                    DealDamageToPlayer(_clientId, attackerSide[slotIndex].GetAttackDamage());
+
+                    HandleVampiric(unitCard, attackerSide[slotIndex], attackerSide[slotIndex].GetAttackDamage());
+                }
+            }
         }
     }
-    
-    private void DealDamageToUnit(UnitCard[] _sideCards, int _unitToDamageIndex, int _incomingDamage)
+
+    private void HandleVampiric(UnitCardSO _unitCard, UnitCard _unit, int _damage)
     {
-        if (_unitToDamageIndex > 0 && ((UnitCardSO)cardDict[_sideCards[_unitToDamageIndex - 1].GetCardName()]).ContainsTrait(TraitsEnum.Shielding))
+        if (_unitCard.ContainsTrait(TraitsEnum.Vampiric))
+            _unit.GiveOverhealth(_damage, true);
+    }
+
+    private bool DealDamageToUnit(UnitCard[] _sideCards, int _unitToDamageIndex, int _incomingDamage)
+    {
+        if (_unitToDamageIndex > 0 && _sideCards[_unitToDamageIndex - 1] && ((UnitCardSO)cardDict[_sideCards[_unitToDamageIndex - 1].GetCardName()]).ContainsTrait(TraitsEnum.Shielding))
         {
-            _sideCards[_unitToDamageIndex - 1].TakeDamage(_incomingDamage);
+            return _sideCards[_unitToDamageIndex - 1].TakeDamage(_incomingDamage);
         }
-        else if (_unitToDamageIndex < 4 && ((UnitCardSO)cardDict[_sideCards[_unitToDamageIndex + 1].GetCardName()]).ContainsTrait(TraitsEnum.Shielding))
+        else if (_unitToDamageIndex < 4 && _sideCards[_unitToDamageIndex + 1] && ((UnitCardSO)cardDict[_sideCards[_unitToDamageIndex + 1].GetCardName()]).ContainsTrait(TraitsEnum.Shielding))
         {
-            _sideCards[_unitToDamageIndex + 1].TakeDamage(_incomingDamage);
+            return _sideCards[_unitToDamageIndex + 1].TakeDamage(_incomingDamage);
         }
         else
         {
-            _sideCards[_unitToDamageIndex].TakeDamage(_incomingDamage);
+            return _sideCards[_unitToDamageIndex].TakeDamage(_incomingDamage);
         }
     }
 
@@ -527,15 +580,42 @@ public class GameManager : NetworkBehaviour
         {
             if (player1Units[i] && player1Units[i].GetCurrentHealth() <= 0)
             {
+                HandleDeathTraits(1, i);
                 Destroy(player1Units[i].gameObject);
                 player1Units[i] = null;
             }
-            
+
             if (player2Units[i] && player2Units[i].GetCurrentHealth() <= 0)
             {
+                HandleDeathTraits(2, i);
                 Destroy(player2Units[i].gameObject);
                 player2Units[i] = null;
             }
+        }
+    }
+    
+    private void HandleDeathTraits(int _clientId, int _unitSlotIndex)
+    {
+        UnitCard[] sideCards = _clientId == 1 ? player1Units : player2Units;
+        UnitCard[] enemySideCards = _clientId == 2 ? player1Units : player2Units;
+
+        UnitCardSO unitCard = (UnitCardSO)cardDict[sideCards[_unitSlotIndex].GetCardName()];
+
+        if (unitCard.ContainsTrait(TraitsEnum.LastLaugh))
+        {
+            if (enemySideCards[_unitSlotIndex])
+                DealDamageToUnit(enemySideCards, _unitSlotIndex, unitCard.GetTraitValue(TraitsEnum.LastLaugh));
+            else
+                DealDamageToPlayer(_clientId, unitCard.GetTraitValue(TraitsEnum.LastLaugh));
+        }
+
+        if (unitCard.ContainsTrait(TraitsEnum.PartingGift))
+        {
+            if (_unitSlotIndex > 0 && sideCards[_unitSlotIndex - 1])
+                sideCards[_unitSlotIndex - 1].GiveOverhealth(unitCard.GetTraitValue(TraitsEnum.PartingGift), currentPlayerTurn == _clientId);
+
+            if (_unitSlotIndex < 4 && sideCards[_unitSlotIndex + 1])
+                sideCards[_unitSlotIndex + 1].GiveOverhealth(unitCard.GetTraitValue(TraitsEnum.PartingGift), currentPlayerTurn == _clientId);
         }
     }
 
@@ -552,7 +632,7 @@ public class GameManager : NetworkBehaviour
 
                 if (leftUnit.ContainsTrait(TraitsEnum.ProtectiveAura))
                 {
-                    _sideCards[i].GiveOverhealth(leftUnit.GetTraitValue(TraitsEnum.ProtectiveAura));
+                    _sideCards[i].GiveOverhealth(leftUnit.GetTraitValue(TraitsEnum.ProtectiveAura), true);
                 }
 
                 if (leftUnit.ContainsTrait(TraitsEnum.InspiringAura))
@@ -572,7 +652,7 @@ public class GameManager : NetworkBehaviour
 
                 if (rightUnit.ContainsTrait(TraitsEnum.ProtectiveAura))
                 {
-                    _sideCards[i].GiveOverhealth(rightUnit.GetTraitValue(TraitsEnum.ProtectiveAura));
+                    _sideCards[i].GiveOverhealth(rightUnit.GetTraitValue(TraitsEnum.ProtectiveAura), true);
                 }
             }
         }

@@ -13,7 +13,6 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     RectTransform rt;
     Vector2 baseAnchoredPos;
     Vector3 baseScale;
-    Outline outline;
     private Canvas localCanvas;
 
     Coroutine anim;
@@ -21,11 +20,8 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     void Awake()
     {
         rt = GetComponent<RectTransform>();
-        outline = GetComponent<Outline>();
 
         localCanvas = GetComponent<Canvas>();
-        
-        if (outline) outline.enabled = false;
     }
 
     public void SetBaseValues()
@@ -36,8 +32,6 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public void OnPointerEnter(PointerEventData _eventData)
     {
-        if (outline) outline.enabled = true;
-
         localCanvas.sortingOrder = 1000;
         Vector2 targetPos = baseAnchoredPos + new Vector2(0f, hoverLift);
         Vector3 targetScale = Vector3.one * hoverScale;
@@ -46,8 +40,6 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public void OnPointerExit(PointerEventData _eventData)
     {
-        if (outline) outline.enabled = false;
-
         localCanvas.sortingOrder = 0;
         StartAnim(baseAnchoredPos, baseScale);
     }

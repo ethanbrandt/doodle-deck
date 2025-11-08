@@ -10,16 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29f13586310614b418b6c3c57c64eff8, type: 3}
-  m_Name: Grave Robber
-  m_EditorClassIdentifier: Assembly-CSharp::UnitCard
-  cardName: Grave Robber
-  cardImage: {fileID: 535731072, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
-  cardDescription: Sneak Attack(1), Opportunistic(1)
+  m_Name: Lumberjack
+  m_EditorClassIdentifier: Assembly-CSharp::UnitCardSO
+  cardName: Lumberjack
+  cardImage: {fileID: -1771785999, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
+  cardDescription: Cleave
   energyCost: 4
-  attackDamage: 3
-  maxHealth: 2
+  attackDamage: 2
+  maxHealth: 4
   traits:
-  - trait: 10
-    val: 1
-  - trait: 3
-    val: 1
+  - trait: 8
+    val: 0

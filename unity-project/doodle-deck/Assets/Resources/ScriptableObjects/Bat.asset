@@ -10,16 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29f13586310614b418b6c3c57c64eff8, type: 3}
-  m_Name: Grave Robber
-  m_EditorClassIdentifier: Assembly-CSharp::UnitCard
-  cardName: Grave Robber
-  cardImage: {fileID: 535731072, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
-  cardDescription: Sneak Attack(1), Opportunistic(1)
-  energyCost: 4
-  attackDamage: 3
-  maxHealth: 2
+  m_Name: Bat
+  m_EditorClassIdentifier: Assembly-CSharp::UnitCardSO
+  cardName: Bat
+  cardImage: {fileID: -1641518333, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
+  cardDescription: Vampiric
+  energyCost: 3
+  attackDamage: 2
+  maxHealth: 1
   traits:
-  - trait: 10
-    val: 1
-  - trait: 3
-    val: 1
+  - trait: 9
+    val: 0

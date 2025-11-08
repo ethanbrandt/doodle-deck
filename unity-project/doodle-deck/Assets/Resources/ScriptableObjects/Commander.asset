@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Commander
   m_EditorClassIdentifier: Assembly-CSharp::UnitCard
   cardName: Commander
-  cardImage: {fileID: 21300000, guid: cc33b760365302242977f514d21b7aed, type: 3}
+  cardImage: {fileID: 354357830, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
   cardDescription: Inspiring Aura(2), Grand Entrance
   energyCost: 7
   attackDamage: 4

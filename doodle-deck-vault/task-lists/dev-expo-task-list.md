@@ -26,6 +26,7 @@
 	- [x] Swift Spell Support
 - [ ] Unit Traits
 - [ ] Unit Status Effects
+- [ ] Add All Cards to Demo Deck
 ##### Unit Traits
 - [x] Movement Traits
 	- [x] Light Footed
@@ -37,17 +38,17 @@
 	- [x] Protective Aura
 	- [x] Inspiring Aura
 	- [x] Shielding
-- [ ] Attack Traits
-	- [ ] Cleave
-	- [ ] Vampiric
+- [x] Attack Traits
+	- [x] Cleave
+	- [x] Vampiric
 - [x] Placement Traits
 	- [x] Sneak Attack
 	- [x] Braced
 	- [x] Grand Entrance
 - [ ] Death Traits
-	- [ ] Last Laugh
+	- [x] Last Laugh
 	- [ ] Explosive Exit
-	- [ ] Parting Gift
+	- [x] Parting Gift
 - [ ] Special Traits
 	- [ ] Overtime
 	- [ ] Left Launcher
@@ -62,26 +63,27 @@
 #### Implementations
 ##### Units
 - [ ] Goblin
-- [ ] Haybale
-- [ ] Kitten
+- [x] Haybale
+- [x] Kitten
 - [ ] Forest Spirit
 - [ ] Golem
-- [ ] Bat
+- [x] Bat
 - [ ] Demon
 - [ ] Rightapult
 - [ ] Leftapult
 - [ ] Boulder
 - [ ] Fleet Captain
-- [ ] Lumberjack
-- [ ] Grave Robber
-- [ ] Thief Boss
-- [ ] Druid Apprentice
+- [x] Lumberjack
+- [x] Grave Robber
+- [x] Arch Demon
+- [x] Druid Apprentice
 - [ ] Goblin Addict
+- [ ] Goblin Demolitionist 
 - [ ] Bear
-- [ ] Royal Guard
+- [x] Royal Guard
 - [ ] Reaper
 - [ ] Assassin
-- [ ] Commander
+- [x] Commander
 - [ ] Druid Master
 
 ##### Spells
@@ -120,6 +122,7 @@
 - [x] Arch Demon
 - [x] Druid Apprentice
 - [ ] Goblin Addict
+- [ ] Goblin Demolitionist 
 - [x] Bear
 - [x] Royal Guard
 - [x] Reaper
@@ -148,11 +151,11 @@
 #### Polish
 ##### Important
 - [ ] Unit Actionable Feedback
-- [ ] Unit Warded Feedback
-- [ ] Unit Intimidated Feedback
-- [ ] Unit Fatigued Feedback
-- [ ] Card Selection Feedback (Maybe an Animation)
-- [ ] Health Value Color Gradient
+- [x] Unit Warded Feedback
+- [x] Unit Intimidated Feedback
+- [x] Unit Fatigued Feedback
+- [x] UI Card Selection Feedback
+- [ ] Unit on Board Selection Feedback
 ##### Extra
 - [ ] Unit Attack Animation
 - [ ] Unit Hit Animation

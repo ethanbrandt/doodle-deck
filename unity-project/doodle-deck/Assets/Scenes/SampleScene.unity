@@ -4735,7 +4735,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -370}
+  m_AnchoredPosition: {x: 0, y: -380}
   m_SizeDelta: {x: 0, y: 700}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1594376879
@@ -5104,7 +5104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   ShowTopMostFoldoutHeaderGroup: 1
-  unitCardPrefab: {fileID: 7502923602422836974, guid: 3e324d5384162f6439e2034e96403a9a, type: 3}
+  unitCardPrefab: {fileID: 3219587522621366975, guid: ab7c45d3f303a474f982ac2e2f1d8eb8, type: 3}
   slots:
   - {fileID: 786930619}
   - {fileID: 1258918570}
@@ -5126,18 +5126,6 @@ MonoBehaviour:
   handManager: {fileID: 22328628}
   clientUIManager: {fileID: 2107251656}
   deck: {fileID: 11400000, guid: acc4be8c0756c0142af7ac634c7c30fb, type: 2}
-  player1Units:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  player2Units:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
 --- !u!4 &1681902699
 Transform:
   m_ObjectHideFlags: 0

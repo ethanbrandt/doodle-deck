@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Druid Apprentice
   m_EditorClassIdentifier: Assembly-CSharp::UnitCard
   cardName: Druid Apprentice
-  cardImage: {fileID: 21300000, guid: cc33b760365302242977f514d21b7aed, type: 3}
+  cardImage: {fileID: -1327017797, guid: 4ed09eaae351cdd478ea1159910e5791, type: 3}
   cardDescription: Protective Aura(2)
   energyCost: 5
   attackDamage: 2
